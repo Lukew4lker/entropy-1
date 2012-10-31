@@ -2,18 +2,17 @@
 ; Title:   bootloader
 ; Author:  Liraal
 ; Date:    2012-10-05
-; Version: 0x1
+; Version: 0x2
 ; --------------------------------------------
 
-;find HMD2043
 set I, 0xFFFF
  add I, 0x1
  hwq I
- ife A, 0x4CAE
-  ife B, 0x74FA
-   ife C, 0x07C2
-   	ife X, 0x4948
-   	 ife Y, 0x2154
+ ife A, 0x24c5
+  ife B, 0x4fd5
+   ife C, 0x000b
+   	ife X, 0x7e91
+   	 ife Y, 0x1eb3
    	  add pc, 0x1
 sub pc, 0xE
 
