@@ -1,63 +1,72 @@
-; --------------------------------------------
-; Title:   bootloader
-; Author:  ColErr
-; Date:    2012-10-05
-; Version: 0x2
-; --------------------------------------------
+;Bootloader by Lucus
 
-;43 words, so a bit longer than the old one.
-;Might be able to trim when the spec is updated
+;Loops through all devices until it finds a drive with a bootable disk,
+;then loads all reserved sectors from it.
+;This will produce a 128 kB file when built.
 
-;Also, Notch mentioned that the Device id (A/B) will change, not sure to what yet.
+set PC, 0xff00
 
-;find M35FD
-SET I, 0xFFFF
- ADD I, 0x1
- HWQ I
- IFE X, 0x1eb3
-  IFE Y, 0x7e91
-   IFE A, 0x7349
-    IFE B, 0xf615
-     IFE C, 0x000b
-      ADD PC, 0x1
-SUB PC, 0xE
+.align 0xff00 ;Put actual code in last sector, so it doesn't get overwritten
 
-;wait for floppy present
-SET A, 0x0
-HWI I
-IFE B, 0x0
-  SUB PC, 0x3
-
-;load SECTORS sectors from the floppy
-#define SECTORS 0x10
-SET A, 0x2
-SET X, SECTORS
-SET Y, (SECTORS-1)*0x200
-
-;The below loop, pushed backwards onto the stack
-SET PUSH, 0x8761
-SET PUSH, 0x6F81
-SET PUSH, 0x8863
-SET PUSH, 0x9383
-SET PUSH, 0x8839
-SET PUSH, 0x1A40 
-SET PUSH, 0x0200
-SET PUSH, 0x7c83
-SET PUSH, 0x8381
-SET PUSH, 0x8478
-;End of loop
-
-;When we jump to SP, we start at the beginning of the loop, in the proper order
-SET PC, SP
-
-;This is the HDD read loop
-;:sectorReadLoop
-;  IFE X, 0x0   ;
-;    SET PC, -1 ;
-;  SUB Y, 0x200 ; 
-;  HWI I        ;
-;  IFN B, 0x1   ;
-;    SUB PC, 0x3;
-;  SUB X, 1     ;
-;  SET PC, SP   ;
-;  SET SP, 0    ;
+hwn Z
+:loop_a
+ife I, Z
+set I, 0
+hwq I
+ife A, 0x24c5
+ife B, 0x4fd5
+ife C, 0x000b
+ife X, 0x7e91
+ife Y, 0x1eb3
+set PC, m35fd_found
+sti PC, loop_a
+:m35fd_found
+set A, 0
+hwi I
+ifn B, 1
+ifn B, 2
+sti PC, loop_a
+set A, 2
+set X, 0
+set Y, 0
+hwi I
+ifn B, 1
+sti PC, loop_a
+set A, 0
+:loop_b
+hwi I
+ife B, 3
+set PC, loop_b
+ifn [0x0], {add PC, 0x11}
+sti PC, loop_a
+;Found bootable disk!
+set Z, [0x8] ;Number of reserved sectors
+sub Z, 1
+ifg Z, 0x7e
+set Z, 0x7e
+set A, 2
+set X, 1
+set Y, 0x200
+:loop_c
+ifg X, Z
+set PC, boot
+hwi I
+add X, 1
+add Y, 0x200
+set A, 0
+:loop_c_a
+hwi I
+ife B, 3
+set PC, loop_c_a
+set A, 2
+set PC, loop_c
+:boot
+set Z, 0
+set Y, 0
+set X, 0
+set J, 0
+set I, 0
+set C, 0
+set B, 0
+set A, 0
+set PC, 0
