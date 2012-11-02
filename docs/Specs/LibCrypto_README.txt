@@ -1,4 +1,4 @@
-ChaOS CRYPTOGRAPHY LIBRARY
+Entropy CRYPTOGRAPHY LIBRARY
 
 -------------------------------------------------------------------------------
 
