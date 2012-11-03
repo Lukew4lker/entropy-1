@@ -110,6 +110,7 @@
         SET Y, lib_crypto_state ; State array pointer.
         SET Z, Y ; Ditto.
         ADD I, 1
+        AND I, 0xff ; Fewer cycles than MOD I, 256.
         ADD Y, I ; Move Y pointer to ith position.
         ADD J, [Y]
         ADD Z, J ; Swap ith and jth values of the state.
