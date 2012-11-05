@@ -1,23 +1,24 @@
 ; --------------------------------------------
-; Title:   				A FAT-16-based filesystem for DCPU-16
+; Title:   				A File Driver to work with Entropy's FAT 16 based File System
 ; Author:  				Liraal
+; Editor:				LukeW4lker
 ; Date of creation:    	2012-10-31
 ; --------------------------------------------
 
 ;=============================================
 ;VARIABLES
 ;=============================================
-:fs_drive 		dat 0x0
-:fs_dir	  		dat 0x0
-:fs_FAT_offset	dat 0xC8
-:fs_FAT_number	dat 0x3
-:fs_root_offset	dat 0xCB
-:fs_FAT			dat 0x0
-:fs_dir_entry	dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
-:fs_dir_entry_end
-:fs_drives		dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
+:fd_drive 		dat 0x0
+:fd_dir	  		dat 0x0
+:fd_FAT_offset	dat 0xC8
+:fd_FAT_number	dat 0x3
+:fd_root_offset	dat 0xCB
+:fd_FAT			dat 0x0
+:fd_dir_entry	dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
+:fd_dir_entry_end
+:fd_drives		dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
 				dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
-:fs_drives_end
+:fd_drives_end
 
 ;=============================================
 ;ROUTINES
@@ -27,15 +28,15 @@
 ;errors
 ;---------------------------------------------
 
-:fs_oom dat 0x0, 0x2345	;out of memory
-:fs_nes	dat 0x0, 0x3456
+:fd_oom dat 0x0, 0x2345	;out of memory
+:fd_nes	dat 0x0, 0x3456
 
 
 ;---------------------------------------------
 ;I/O
 ;---------------------------------------------
 
-:fs_init
+:fd_init
 set push, A
 set push, B
 set push, C
@@ -46,7 +47,7 @@ set push, Y
 set push, Z
 hwn J
 set I, 0x0
-set Z, fs_drives
+set Z, fd_drives
 :fs_init_loop
  hwq I
  ife A, 0x24c5
@@ -54,10 +55,10 @@ set Z, fs_drives
    ife C, 0x000b
     ife X, 0x7e91
      ife Y, 0x1eb3
-	  set pc, fs_init_add
+	  set pc, fd_init_add
  add I, 0x1
  ifn I, J
-	set pc, fs_init_loop
+	set pc, fd_init_loop
 set Z, pop
 set Y, pop
 set X, pop
@@ -68,22 +69,22 @@ set B, pop
 set A, pop
 set pc, pop
 
-:fs_init_add
+:fd_init_add
 set [Z], I
-ifl Z, fs_drives_end
+ifl Z, fd_drives_end
 	add Z, 0x1
 add I, 0x1
-set pc, fe_init_loop
+set pc, fd_init_loop
 
-:fs_write_sector
+:fd_write_sector
 set push, Z
 set Z, 0x3
-set pc, fs_load_sector_start
+set pc, fd_load_sector_start
 
-:fs_load_sector		;A - starting sector, B - number of sectors, C - location in memory
+:fd_load_sector		;A - starting sector, B - number of sectors, C - location in memory
 set push, Z
 set Z, 0x2
-:fs_load_sector_start
+:fd_load_sector_start
 set push, A
 set push, B
 set push, C
@@ -93,14 +94,14 @@ set X, A
 set Y, C
 set C, B
 set A, Z
-:fs_load_sector_loop
- hwi [fs_drive]
+:fd_load_sector_loop
+ hwi [fd_drive]
  ifn B, 0x1
-	set pc, fs_load_sector_loop
+	set pc, fd_load_sector_loop
  add Y, 0x200
  sub C, 0x1
  ifn C, 0x1
-	set pc, fs_load_sector_loop
+	set pc, fd_load_sector_loop
 set Y, pop
 set X, pop
 set C, pop
