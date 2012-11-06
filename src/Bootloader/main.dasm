@@ -37,9 +37,10 @@ set A, 0
 hwi I
 ife B, 3
 set PC, loop_b
-ifn [0x0], {add PC, 0x11}
+ifn [0x0], {add PC, 0x11} ;Flags disk bpotable
 sti PC, loop_a
 ;Found bootable disk!
+set push, I
 set Z, [0x8] ;Number of reserved sectors
 sub Z, 1
 ifg Z, 0x7e

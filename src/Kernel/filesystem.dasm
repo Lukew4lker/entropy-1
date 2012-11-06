@@ -1,6 +1,7 @@
 ; --------------------------------------------
-; Title:   				A FAT-16-based filesystem for DCPU-16
+; Title:   				A File Driver to work with Entropy's FAT 16 based File System
 ; Author:  				Liraal
+; Editor:				LukeW4lker
 ; Date of creation:    	2012-10-31
 ; --------------------------------------------
 
@@ -13,7 +14,6 @@
 :fd_FAT_number	dat 0x3
 :fd_root_offset	dat 0xCB
 :fd_FAT			dat 0x0
-:fd_last_free_sector	dat 0x0
 :fd_dir_entry		dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
 :fd_dir_entry_end
 :fd_drives		dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
@@ -31,6 +31,7 @@
 ;---------------------------------------------
 
 :fd_oom 	dat 0x0, 0x2345	;out of memory
+:fd_oom dat 0x0, 0x2345	;out of memory
 :fd_nes	dat 0x0, 0x3456
 
 
@@ -51,6 +52,8 @@ hwn J
 set I, 0x0
 set Z, fd_drives
 :fd_init_loop
+
+:fs_init_loop
  hwq I
  ife A, 0x24c5
   ife B, 0x4fd5
@@ -59,6 +62,7 @@ set Z, fd_drives
      ife Y, 0x1eb3
 	  set pc, fd_init_add
  add I, 1
+ add I, 0x1
  ifn I, J
 	set pc, fd_init_loop
 set Z, pop
@@ -76,16 +80,20 @@ set [Z], I
 ifl Z, fd_drives_end
 	add Z, 6
 add I, 1
+	add Z, 0x1
+add I, 0x1
 set pc, fd_init_loop
 
 :fd_write_sector
 set push, Z
 set Z, 3
+set Z, 0x3
 set pc, fd_load_sector_start
 
 :fd_load_sector		;A - starting sector, B - number of sectors, C - location in memory
 set push, Z
 set Z, 2
+set Z, 0x2
 :fd_load_sector_start
 set push, A
 set push, B
@@ -103,6 +111,12 @@ set A, Z
  add Y, 0x200
  sub C, 1
  ifn C, 1
+ hwi [fd_drive]
+ ifn B, 0x1
+	set pc, fd_load_sector_loop
+ add Y, 0x200
+ sub C, 0x1
+ ifn C, 0x1
 	set pc, fd_load_sector_loop
 set Y, pop
 set X, pop
@@ -224,10 +238,19 @@ set pc, pop
 
 :fd_delete_file
 
-:fd_open_file
-
-:fd_apply
-
-:fd_close_file
-
-:fd_discard 
+:fd_open_file ; Open file A for reading and writing.
+:fd_close_file ; Close file A.
+:fd_find_sector ; Find sector B in file A.
+:fd_apply ; Apply changes to file A. Do this before loading another sector in the file.
+:fd_discard ; Discard changes to file A. Will reload the current sector from disk.
+:fd_load_prog ; Load program A into memory. Will allocate 16 extra words of space.
+:fd_create ; Create file, dir or link A with flags B.
+:fd_delete ; Delete file, dir or link A.
+:fd_move ; Move file, dir or link A.
+:fd_change_dir ; Change the working directory to A, one level at a time.
+:fd_list ; List the files in the working directory.
+:fd_get_wd ; Get the working directory.
+:fd_get_flags ; Get the flags for file A.
+:fd_set_flags ; Set the flags for file A to B. Some flag changes will be reverted before applying.
+:fd_get_props ; Get the properties (size, number of children, flags, create, edit and view times).
+:fd_format ; Format disk A with the filesystem.
