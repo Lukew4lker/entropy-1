@@ -42,7 +42,7 @@ Funtion Table:
 Device class:
 	Purpose:
 		To Identify an display as an display, a weapon as an Weapon, or an thruster as an thuster, etc.
-		They will help to organize similar devices with similar functions into groups, that can being handled by some 
+		They will help to organize similar devices with similar functions into groups, that can being handled by some.
 		high-level software at once.
 		
 	Layout:
