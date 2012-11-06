@@ -36,18 +36,17 @@ INITIALIZATION VECTORS:
 ***********************
 
 The algorithm is vunerable to attack unless an IV is used with every message.
-It is recommended to use an IV of 10 bytes (10 words in RAM, see above). This
-is part of the key, so a 246 byte key can be generated once outside 0x10c, such
-as on Random.org, and reused ad infinitum. However, with each new message, a
-new IV must be generated.The best way to do this would probably be to utilize
-a clock connected to the DCPU 16 and make some sort of random number generator.
+LibRNG has been provided for this purpose. It generates a 16 byte IV
+(16 words, see above). This is part of the key, so a 240 byte key can be
+generated once outside 0x10c, such as on Random.org, and reused ad infinitum.
+However, with each new message, a new IV must be generated.
 
-For encryption, a random 10 byte IV should be generated and appended
-(prepending could decrease security) to the 246 byte key. AFTER the message has
+For encryption, a random 16 byte IV should be generated and appended
+(prepending could decrease security) to the 240 byte key. AFTER the message has
 been encrypted, the IV should be prepended (not appended) to the ciphertext.
 
-For decryption, the first 10 bytes (i.e., the IV) should be read from the
-ciphertext and prepended to the 246 byte key, which has been shared in advance.
+For decryption, the first 16 bytes (i.e., the IV) should be read from the
+ciphertext and appended to the 240 byte key, which has been shared in advance.
 Decryption should then proceed as normal, starting from right after the last
 byte of the IV.
 

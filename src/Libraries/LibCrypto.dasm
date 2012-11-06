@@ -55,13 +55,14 @@
         STI [I], J
         IFN I, lib_crypto_end
             SET PC, lib_crypto_initloop
-    SET [lib_crypto_Firstrun_flag], 1
+    SET [lib_crypto_firstrun_flag], 1
     SET PC, POP
 
 ; Sets up the state based on the key.
 ; A is the number of iterations and B is the location of the key in memory.
 
 :lib_crypto_shufflestate
+    SET [lib_crypto_firstrun_flag], 0
     SET J, 0
     :lib_crypto_shuffleloop_outer
         SET I, 0 ; Inner loop counter.
@@ -84,7 +85,6 @@
             SUB A, 1
             IFN A, 0
                 SET PC, lib_crypto_shuffleloop_outer
-            SET [lib_crypto_Firstrun_flag], 0
             SET PC, POP
 
 ; Applies the algorithm with arguments passed from the wrapper subroutine.
@@ -94,7 +94,7 @@
     SET PUSH, B
     SET PUSH, C
     SET PUSH, I ; Store values on stack.
-    IFN [lib_crypto_Firstrun_flag], 1
+    IFN [lib_crypto_firstrun_flag], 1
         JSR lib_crypto_init
     SET A, POP ; Set A to iterations.
     SET B, PICK 2 ; Set B to key location.
@@ -110,6 +110,7 @@
         SET Y, lib_crypto_state ; State array pointer.
         SET Z, Y ; Ditto.
         ADD I, 1
+        AND I, 0xff ; Fewer cycles than MOD I, 256.
         ADD Y, I ; Move Y pointer to ith position.
         ADD J, [Y]
         ADD Z, J ; Swap ith and jth values of the state.
@@ -122,7 +123,7 @@
         ADD B, 1
         SET PC, lib_crypto_applyloop
 
-:lib_crypto_Firstrun_flag
+:lib_crypto_firstrun_flag
 DAT 0x01
 
 :lib_crypto_state

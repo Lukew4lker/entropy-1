@@ -1,23 +1,26 @@
 ; --------------------------------------------
-; Title:   				A FAT-16-based filesystem for DCPU-16
+; Title:   				A File Driver to work with Entropy's FAT 16 based File System
 ; Author:  				Liraal
+; Editor:				LukeW4lker
 ; Date of creation:    	2012-10-31
 ; --------------------------------------------
 
 ;=============================================
 ;VARIABLES
 ;=============================================
-:fs_drive 		dat 0x0
-:fs_dir	  		dat 0x0
-:fs_FAT_offset	dat 0xC8
-:fs_FAT_number	dat 0x3
-:fs_root_offset	dat 0xCB
-:fs_FAT			dat 0x0
-:fs_dir_entry	dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
-:fs_dir_entry_end
-:fs_drives		dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
-				dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
-:fs_drives_end
+:fd_drive_cur 		dat 0x0
+:fd_dir	  		dat 0x0
+:fd_FAT_offset	dat 0xC8
+:fd_FAT_number	dat 0x3
+:fd_root_offset	dat 0xCB
+:fd_FAT			dat 0x0
+:fd_dir_entry		dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
+:fd_dir_entry_end
+:fd_drives		dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
+					dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
+					dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
+					dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
+:fd_drives_end
 
 ;=============================================
 ;ROUTINES
@@ -27,15 +30,16 @@
 ;errors
 ;---------------------------------------------
 
-:fs_oom dat 0x0, 0x2345	;out of memory
-:fs_nes	dat 0x0, 0x3456
+:fd_oom 	dat 0x0, 0x2345	;out of memory
+:fd_oom dat 0x0, 0x2345	;out of memory
+:fd_nes	dat 0x0, 0x3456
 
 
 ;---------------------------------------------
 ;I/O
 ;---------------------------------------------
 
-:fs_init
+:fd_init
 set push, A
 set push, B
 set push, C
@@ -46,7 +50,9 @@ set push, Y
 set push, Z
 hwn J
 set I, 0x0
-set Z, fs_drives
+set Z, fd_drives
+:fd_init_loop
+
 :fs_init_loop
  hwq I
  ife A, 0x24c5
@@ -54,10 +60,11 @@ set Z, fs_drives
    ife C, 0x000b
     ife X, 0x7e91
      ife Y, 0x1eb3
-	  set pc, fs_init_add
+	  set pc, fd_init_add
+ add I, 1
  add I, 0x1
  ifn I, J
-	set pc, fs_init_loop
+	set pc, fd_init_loop
 set Z, pop
 set Y, pop
 set X, pop
@@ -68,22 +75,26 @@ set B, pop
 set A, pop
 set pc, pop
 
-:fs_init_add
+:fd_init_add
 set [Z], I
-ifl Z, fs_drives_end
+ifl Z, fd_drives_end
+	add Z, 6
+add I, 1
 	add Z, 0x1
 add I, 0x1
-set pc, fe_init_loop
+set pc, fd_init_loop
 
-:fs_write_sector
+:fd_write_sector
 set push, Z
+set Z, 3
 set Z, 0x3
-set pc, fs_load_sector_start
+set pc, fd_load_sector_start
 
-:fs_load_sector		;A - starting sector, B - number of sectors, C - location in memory
+:fd_load_sector		;A - starting sector, B - number of sectors, C - location in memory
 set push, Z
+set Z, 2
 set Z, 0x2
-:fs_load_sector_start
+:fd_load_sector_start
 set push, A
 set push, B
 set push, C
@@ -93,14 +104,20 @@ set X, A
 set Y, C
 set C, B
 set A, Z
-:fs_load_sector_loop
- hwi [fs_drive]
+:fd_load_sector_loop
+ hwi [fd_drive_cur]
  ifn B, 0x1
-	set pc, fs_load_sector_loop
+	set pc, fd_load_sector_loop
+ add Y, 0x200
+ sub C, 1
+ ifn C, 1
+ hwi [fd_drive]
+ ifn B, 0x1
+	set pc, fd_load_sector_loop
  add Y, 0x200
  sub C, 0x1
  ifn C, 0x1
-	set pc, fs_load_sector_loop
+	set pc, fd_load_sector_loop
 set Y, pop
 set X, pop
 set C, pop
@@ -109,3 +126,131 @@ set A, pop
 set Z, pop
 set pc, pop
 
+;---------------------------------------------
+;FAT ACCESS 
+;---------------------------------------------
+
+:fd_load_FAT
+ifn [fd_FAT], 0x0
+	set pc, pop
+set push, A
+set push, B
+set push, C
+set A, [fd_FAT_number]
+jsr mm_request_memory
+set C, A
+mul C, 0x200
+set [fd_FAT], C
+set A, [fd_FAT_offset]
+set B, [fd_FAT_number]
+jsr fd_load_sector
+set C, pop
+set B, pop
+set A, pop
+set pc, pop
+
+:fd_update_FAT
+ife [fd_FAT], 0x0
+	set pc, pop
+set push, A
+set push, B
+set push, C
+set A, [fd_FAT_offset]
+set B, [fd_FAT_number]
+set C, [fd_FAT]
+jsr fd_write_sector
+set C, pop
+set B, pop
+set A, pop
+set pc, pop
+
+:fd_free_FAT
+ife [fd_FAT], 0x0
+	set pc, pop
+set push, A
+set push, B
+set A, [fd_FAT]
+div A, 0x200
+set B, [fd_FAT_number]
+:fd_free_FAT_loop
+ jsr mm_free_page
+ add A, 1
+ sub B, 1
+ ifn B, 0x0
+	set pc, fd_free_FAT_loop
+set [fd_FAT], 0x0
+set B, pop
+set A, pop
+set pc, pop
+
+:fd_get_FAT_entry	;A - sector number
+jsr fd_load_FAT
+add A, [fd_FAT]
+set push, A
+set A, [peek]
+set ex, pop
+set pc, pop
+
+:fd_get_free_sector	;A - a free sector or 0xFFFF if none
+set push, X
+set push, Y
+set push, Z
+set Y, 0x59F
+sub Y, [fs_root_offset]
+jsr fd_load_FAT
+set Z, [fs_FAT]
+add Z, 0x1FF
+set A, [Z]
+add A, [fs_FAT]
+ :fd_get_free_sector_loop
+ ife [A], 0x0
+	set pc, fd_get_free_sector_end
+ add A, 0x1
+ ifg A, Y
+	jsr fd_get_free_sector_bound
+ ifn X, 0x2
+	set pc, fd_get_free_sector_loop
+ sub A, [fs_FAT]
+ set [Z], A
+ set Z, pop
+ set Y, pop
+ set X, pop
+ set A, 0xFFFF
+ set pc, pop
+ :fd_get_free_sector_end
+ sub A, [fs_FAT]
+ set [Z], A
+ set Z, pop
+ set Y, pop
+ set X, pop
+ set pc, pop
+ 
+:fd_get_free_sector_bound
+set A, [fs_FAT]
+add X, 0x1 
+set pc, pop
+
+;---------------------------------------------
+;FILE ACCESS
+;---------------------------------------------
+
+:fd_create_file	;A - file length
+
+:fd_delete_file
+
+:fd_open_file ; Open file A for reading and writing.
+:fd_close_file ; Close file A.
+:fd_find_sector ; Find sector B in file A.
+:fd_apply ; Apply changes to file A. Do this before loading another sector in the file.
+:fd_discard ; Discard changes to file A. Will reload the current sector from disk.
+:fd_load_prog ; Load program A into memory. Will allocate 16 extra words of space.
+:fd_create ; Create file, dir or link A with flags B.
+:fd_delete ; Delete file, dir or link A.
+:fd_move ; Move file, dir or link A.
+:fd_change_dir ; Change the working directory to A, one level at a time.
+:fd_list ; List the files in the working directory.
+:fd_get_wd ; Get the working directory.
+:fd_get_flags ; Get the flags for file A.
+:fd_set_flags ; Set the flags for file A to B. Some flag changes will be reverted before applying.
+:fd_get_props ; Get the properties (size, number of children, flags, create, edit and view times).
+:fd_format ; Format disk A with the filesystem.
