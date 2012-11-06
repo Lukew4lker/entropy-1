@@ -64,7 +64,7 @@
 
 :lib_rng_generate ; A is location where random number should be written to.
     SET PUSH, A
-    JSR 0xHHHH ; where HHHH is the code for cd_get_sys_time.
+    JSR [0xHHHH] ; where HHHH is the code for cd_get_sys_time.
     SET [lib_rng_seed_firstbyte], B
     SHR [lib_rng_seed_firstbyte], 8
     SET [lib_rng_seed_secondbyte], B
