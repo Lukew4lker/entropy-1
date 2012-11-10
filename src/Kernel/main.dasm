@@ -10,6 +10,10 @@
 ;JSR lib_STDIO_init
 jsr mm_init
 jsr im_init
+jsr fd_init
+set A, 0x1
+jsr fd_get_free_sector
+set B, [fd_FAT]
 ;JSR multitasker_Init
 
 sub pc, 1	;Or else it randomly wanders in the first loaded function. When kernel is working, this should simply never be reached.
@@ -18,5 +22,6 @@ sub pc, 1	;Or else it randomly wanders in the first loaded function. When kernel
 ;#include "multitasker.dasm"	;fails to build, remove ; when it builds again.
 #include "int_manager.dasm"
 #include "utilities.dasm"
+#include "filesystem.dasm"
 ;#include "lib_STDIO.dasm
 :free_space_start
