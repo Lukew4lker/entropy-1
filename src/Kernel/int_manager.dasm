@@ -155,6 +155,12 @@ set pc, pop
 ;Handles actual interrupts
 :interrupt_address ;A=interrupt
 set push, ex
+ifn a, clock_interrupt_num
+set pc, not_clock
+jsr cd_interrupt_handler
+set ex, pop
+rfi 0
+:not_clock
 set push, b
 set push, c
 set push, x
