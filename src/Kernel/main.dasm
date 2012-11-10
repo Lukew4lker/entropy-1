@@ -8,12 +8,17 @@
 
 ;STDIO isn't included yet, as it still assumes arbitrary mallocs
 ;JSR lib_STDIO_init
-JSR fn_init_MM
+JSR mm_init_MM
 JSR fn_init_IM
 JSR multitasker_Init
+JSR fd_init
+SET A, 0x1
+JSR fd_create_file
+SUB PC, 0x1
 
 #include "mem_manager.dasm"
 #include "multitasker.dasm"
 #include "int_manager.dasm"
+#include "filesystem.dasm"
 ;#include "lib_STDIO.dasm
 :free_space_start

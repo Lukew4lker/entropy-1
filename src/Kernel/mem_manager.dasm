@@ -16,32 +16,32 @@
 
 ;FUNCTIONS:
 
-;fn_init_MM  		;Initiates the memory manager, always call this first.
+;mm_init_MM  		;Initiates the memory manager, always call this first.
 					;Arguments: None, Return: None.
 
-;fn_request_memory	;Requests several pages of memory in a row.
+;mm_request_memory	;Requests several pages of memory in a row.
 					;Arguments: A=number of pages requested (0-127), Return: A=first allocated page (0-127) or -1 if out of space.
 
-;fn_clear_process	;Frees all sectors belonging to process A.
+;mm_clear_process	;Frees all sectors belonging to process A.
 					;Arguments: A=process to be cleared (0-63), Return: None.
 
-;fn_request_page	;Requests one page of memory for [current_process]
+;mm_request_page	;Requests one page of memory for [current_process]
 					;Arguments: None, Return: A=allocated page (0-127) or -1 if out of space.
 
-;fn_free_page		;Frees page A if it belongs to [current_process].
+;mm_free_page		;Frees page A if it belongs to [current_process].
 					;Arguments: A=page to be freed (0-127), Return: A=0 on success or 0x101 if no permission.
 
-;fn_clear_page		;Clears a page, setting all words within that page to 0.
+;mm_clear_page		;Clears a page, setting all words within that page to 0.
 					;Arguments A=page to be cleared (0-127), Return: None.
 
-;fn_copy_page		;Arguments: A=source page (0-127), B=destination page (0-127), Return: None
+;mm_copy_page		;Arguments: A=source page (0-127), B=destination page (0-127), Return: None
 					;Copies an entire page to another page
 
 ;Many of these functions use the variable [current_process]. This should be kept up to date by the process manager or changed for testing purposes.
 
 ;Call functions this way:
 ;set a, argument_0
-;jsr fn_function
+;jsr mm_function
 ;set return_0, a
 
 ;DEFINES:
@@ -54,19 +54,19 @@
 
 ;Always call this before the first function call, as it reserves the pages in use by the kernel (or whatever is in memory on build)
 ;It also reserves the last page for the stack. The pages in use by the kernel are simply added to [current_process].
-:fn_init_MM ;Arguments: None, Return: None
+:mm_init_MM ;Arguments: None, Return: None
 set push, a
 set a, free_space_start
 shr a, 9 ;div a, 512
 add a, 1
 set [page_header_start + 127], -1 ;last page reserved for stack, system stack shouldn't use more than 512 words
-jsr fn_request_memory
+jsr mm_request_memory
 set a, pop
 set pc, pop
 
 ;This looks for a series of A free pages and allocates them to the running process.
 ;Use this only for assigning memory for a process on startup. Does not use process_header.
-:fn_request_memory ;Arguments: A=number_of_pages, Return: A=first_allocated_page (-1=no_space)
+:mm_request_memory ;Arguments: A=number_of_pages, Return: A=first_allocated_page (-1=no_space)
 set push, b
 set push, c
 iaq 1
@@ -116,7 +116,7 @@ set c, pop
 set b, pop
 set pc, pop
 
-:fn_request_page ;Arguments: None, Return: A=allocated_page (-1=no_space)
+:mm_request_page ;Arguments: None, Return: A=allocated_page (-1=no_space)
 iaq 1
 set a, page_header_start
 :.loop_a
@@ -149,7 +149,7 @@ set b, pop
 set pc, pop
 
 ;This frees all pages belonging to process A
-:fn_clear_process ;Arguments: A=process, Return: A=0 on success, errno on failure
+:mm_clear_process ;Arguments: A=process, Return: A=0 on success, errno on failure
 set push, b
 iaq 1
 set a, [a + process_first_pages_start]
@@ -168,7 +168,7 @@ set b, pop
 set pc, pop
 
 ;free a page to make space for other processes. This should not be called in a signal handler.
-:fn_free_page ;Arguments: A=freed_page, Return: A=0 on success, errno on failure
+:mm_free_page ;Arguments: A=freed_page, Return: A=0 on success, errno on failure
 set push, b
 iaq 1
 set b, [current_process]
@@ -198,7 +198,7 @@ set b, pop
 set pc, pop
 
 ;Sets all words in specified page to 0
-:fn_clear_page ;Arguments A=page, Return: None.
+:mm_clear_page ;Arguments A=page, Return: None.
 set push, i
 set push, j
 iaq 1
@@ -230,7 +230,7 @@ set i, pop
 set pc, pop
 
 ;Copies an entire page to another page
-:fn_copy_page ;Arguments: A=source page, B=destination page, Return: None
+:mm_copy_page ;Arguments: A=source page, B=destination page, Return: None
 set push, i
 set push, j
 iaq 1
