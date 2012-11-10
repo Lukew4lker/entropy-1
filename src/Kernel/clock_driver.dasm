@@ -44,7 +44,7 @@ add [cd_sys_time], 1
 :no_second_passed
 ifn [cd_clock_handler], 0
 jsr [cd_clock_handler]
-;jsr pm_schedule				;Add multitasker function that should be called every tick here.
+jsr multitasker_Interrupt				;Add multitasker function that should be called every tick here.
 set pc, pop
 
 :cd_set_clock_handler
