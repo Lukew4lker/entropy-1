@@ -1,6 +1,6 @@
 ;CLOCK DRIVER by Lucus
 
-.define tick_length 1	;in 1/60 seconds
+.define tick_length 1	;in 1/60 seconds, 60 must be divisible by it.
 .define clock_interrupt_num 17
 
 :cd_init
