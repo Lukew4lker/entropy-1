@@ -31,7 +31,7 @@ hwi i
 set pc, pop
 
 :cd_interrupt_handler
-add [cd_on_time+1], 1
+add [cd_on_time+1], tick_length
 ife ex, 1
 add [cd_on_time], 1
 add [cd_second_counter], 1
