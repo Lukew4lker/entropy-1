@@ -1,0 +1,74 @@
+;CLOCK DRIVER by Lucus
+
+.define tick_length 1	;in 1/60 seconds
+.define clock_interrupt_num 17
+
+:cd_init
+hwn i
+sub i, 1
+:.loop_a
+ife i, -1
+set pc, .no_clock
+hwq i
+ife a, 0xb402
+ife b, 0x12d0
+ife c, 0x0001
+ife x, 0x0000
+ife y, 0x0000
+set pc, .found_clock
+std pc, .loop_a
+:.no_clock
+set [cd_clock_id], -1
+set pc, pop
+:.found_clock
+set [cd_clock_id], i
+set b, clock_interrupt_num
+set a, 2
+hwi i
+set a, 0
+set b, tick_length
+hwi i
+set pc, pop
+
+:cd_interrupt_handler
+add [cd_on_time+1], 1
+ife ex, 1
+add [cd_on_time], 1
+add [cd_second_counter], 1
+ifn [cd_second_counter], 60/tick_length
+set pc, no_second_passed
+set [cd_second_counter], 0
+add [cd_sys_time+1], 1
+ife ex, 1
+add [cd_sys_time], 1
+:no_second_passed
+ifn [cd_clock_handler], 0
+jsr [cd_clock_handler]
+;jsr pm_schedule				;Add multitasker function that should be called every tick here.
+set pc, pop
+
+:cd_set_clock_handler
+set [cd_clock_handler], a
+set pc, pop
+
+:cd_get_on_time
+set a, [cd_on_time]
+set b, [cd_on_time+1]
+set pc, pop
+
+:cd_get_sys_time
+set a, [cd_sys_time]
+set b, [cd_sys_time+1]
+set pc, pop
+
+:cd_set_sys_time
+set [cd_sys_time], a
+set [cd_sys_time+1], b
+set pc, pop
+
+;DATA
+:cd_second_counter	.dat 0x0000
+:cd_on_time			.dat 0x0000, 0x0000
+:cd_sys_time		.dat 0x0000, 0x0000
+:cd_clock_id		.dat 0x0000
+:cd_clock_handler	.dat 0x0000
