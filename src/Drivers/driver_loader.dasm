@@ -1,0 +1,114 @@
+; --------------------------------------------
+; Title:   driver_loader
+; Author:  Kelmoir
+; Date:    06.11.2012
+; Version: 1.0
+; --------------------------------------------
+; General: this Programm loads all the neccessary drives for the avaiable hardware.
+
+; note for self: fd_get_props will need 9 words of space, ptr to be handled over in b (, size gotta be the first 2 words
+
+
+
+:driver_loader 
+;		Table layout
+;		+----------+----+--------------------------------------------------------------+
+;		|Offset    |size|contains/purpose                                              |
+;		+----------+----+--------------------------------------------------------------+
+;		|0x0       |1   |the corresponding hardware number                             |
+;		|0x1       |2   |man ID, little endian                                         |
+;		|0x3       |2   |dev ID, little endian                                         |
+;		|0x5       |1   |hardware version                                              |
+;		|0x6       |1   |device class                                                  |
+;		|0x7       |1   |ptr to driver function table                                  |
+;		+----------+----+--------------------------------------------------------------+
+:.table_ptr
+	dat 0x0000
+:.num_drivers
+	dat 0x0000
+:.free_space_ptr
+	dat 0x0000
+
+
+;---------------------------------------------
+; Title:	driver_loader_load
+;
+; List of drives is being created, and all accessible drivere are loaded
+;
+; Params:	a - HWN of the initial Floppy driver
+;			b - Ptr to the initial Floppy driver Function table
+; deytroys:	all params
+; returns:  none
+;---------------------------------------------
+:driver_loader_load
+	set	push,	c
+	set	push,	x							; running Index
+	hwn	c
+	set	[driver_loader_num_drivers], 	c
+	jsr	driver_loader_create_table
+	; now enter the correct directory...
+	jsr	driver_loader_move_to_driver_dir
+	; now we can finally load the actual drivers into table, dunno what to do, when we can't load the corresponding driver, though
+	set	x,		0
+	:.loading_loop
+		
+	
+	set	x,		pop
+	set	c,		pop
+	set	pc,		pop
+	
+;---------------------------------------------
+; Title:	driver_loader_create_table
+; creates an empty Table for the drivers (and thus, allocates the space)
+;
+; Params:	c - Numer of rows the Table will need
+; returns:  none
+;---------------------------------------------
+:driver_loader_create_table
+; creates th
+	set	push,	a
+	set	push,	b
+	set	a,		c
+	mul	a,		8
+	set	b,		a
+	jsr	mm_request_memory
+	ife	a,		0xFFFF		; catastrophic failure
+		sub	p,	1
+	set	[driver_loader_table_ptr],	a
+	add	b,		a			; not pointer to first free word, if we can enlarge the current memory section
+	set	[driver_loader_free_space_ptr],	b
+	set	b,		pop
+	set	a,		pop
+	set	pc,		pop
+	
+	
+;---------------------------------------------
+; Title:	driver_loader_move_to_driver_dir
+;	
+; moves the loader into the driver folder, to acess the drivers
+;
+; Params:	none
+; returns:  none
+;---------------------------------------------	
+:driver_loader_move_to_driver_dir
+	set	push,	a
+	:.loop_root
+		set	a, driver_loader_table_ptr			; just some chunk of free space to call the current wd, will get overwritten anyways. (and yes, it is dirty, but small)	
+		jsr	fd_get_wd
+		ife	[a],	0x2f01			; "/", means root dir. If the the output changes, then I will need to adapt it...
+			set	pc,	.post_loop_root
+		; not in root dir, though :(
+		set	a,	.dir_up
+		jsr	fd_change_dir
+		set	pc,	.loop_root
+	:.post_loop_root
+	set	a,		.dir_drv
+	jsr	fd_change_dir
+	set	a,		pop
+	set	pc,		pop
+	; data
+	:.dir_up
+	dat	0x2E02	0x002E		;".."
+	:.dir_drv
+	dat	0x6403	0x7672		;"drv"
+
