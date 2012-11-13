@@ -41,49 +41,6 @@
 ;I/O
 ;---------------------------------------------
 
-:fd_init
-set push, A
-set push, B
-set push, C
-set push, I
-set push, J
-set push, X
-set push, Y
-set push, Z
-hwn J
-set I, 0x0
-set Z, fd_drives
-:fd_init_loop
- hwq I
- ife A, 0x24c5
-  ife B, 0x4fd5
-   ife C, 0x000b
-    ife X, 0x7e91
-     ife Y, 0x1eb3
-	  set pc, fd_init_add
- add I, 1
- add I, 0x1
- ifn I, J
-	set pc, fd_init_loop
-set Z, pop
-set Y, pop
-set X, pop
-set J, pop
-set I, pop
-set C, pop
-set B, pop
-set A, pop
-set pc, pop
-
-:fd_init_add
-set [Z], I
-ifl Z, fd_drives_end
-	add Z, 6
-add I, 1
-	add Z, 0x1
-add I, 0x1
-set pc, fd_init_loop
-
 :fd_write_sector
 set push, Z
 set Z, 3

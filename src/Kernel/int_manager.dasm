@@ -61,23 +61,6 @@ set [b], a
 set b, pop
 set pc, pop
 
-;Initiates the interrupt manager
-:im_init ;Arguments: None, Return: None.
-set push, i
-set push, j
-ias interrupt_address
-set i, interrupt_header_start ;initiate interrupt header to -1
-:.loop_a
-sti [i], -1
-sti [i], -1
-sti [i], -1
-sti [i], -1
-ifn i, interrupt_header_end
-set pc, .loop_a
-set j, pop
-set i, pop
-set pc, pop
-
 :im_check_signals ;Arguments: None, Return: None.
 set push, a
 set push, b
@@ -201,12 +184,9 @@ set pc, .finish
 set a, [b]
 shl a, 1 ;mul x, 2
 
-;SHOULD COMPILE FINE, ERROR WITH ORGANIC
-;set a, [a + (interrupt_header_start + 1)]
-;This will work for now
-add a, (interrupt_header_start + 1)
-set a, [a]
-;End hotfix
+;SHOULD COMPILE FINE, ERROR WITH ORGANIC	changed hotfix
+.define interrupt_header_start_plus_one interrupt_header_start + 1
+set a, [a + interrupt_header_start_plus_one]
 set c, [b]
 add c, signal_handler_table_start
 jsr [c]

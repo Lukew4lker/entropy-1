@@ -11,16 +11,6 @@
 #define err_unknown			0x100 ;start at 0x100 to ensure no short words are used, that could result in problems with some code.
 #define err_no_permission	0x101
 
-:mm_init ;Arguments: None, Return: None
-set push, a
-set a, free_space_start
-shr a, 9 ;div a, 512
-add a, 1
-set [page_header_start + 127], -1 ;last page reserved for stack, system stack shouldn't use more than 512 words
-jsr mm_request_memory
-set a, pop
-set pc, pop
-
 :mm_request_memory ;Arguments: A=number_of_pages, Return: A=first_allocated_page (-1=no_space)
 set push, b
 set push, c

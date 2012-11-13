@@ -3,33 +3,6 @@
 .define tick_length 1	;in 1/60 seconds, 60 must be divisible by it.
 .define clock_interrupt_num 17
 
-:cd_init
-hwn i
-sub i, 1
-:.loop_a
-ife i, -1
-set pc, .no_clock
-hwq i
-ife a, 0xb402
-ife b, 0x12d0
-ife c, 0x0001
-ife x, 0x0000
-ife y, 0x0000
-set pc, .found_clock
-std pc, .loop_a
-:.no_clock
-set [cd_clock_id], -1
-set pc, pop
-:.found_clock
-set [cd_clock_id], i
-set b, clock_interrupt_num
-set a, 2
-hwi i
-set a, 0
-set b, tick_length
-hwi i
-set pc, pop
-
 :cd_interrupt_handler
 add [cd_on_time+1], tick_length
 ife ex, 1
@@ -44,7 +17,8 @@ add [cd_sys_time], 1
 :no_second_passed
 ifn [cd_clock_handler], 0
 jsr [cd_clock_handler]
-jsr multitasker_Interrupt				;Add multitasker function that should be called every tick here.
+;jsr multitasker_Interrupt				;Add multitasker function that should be called every tick here.
+;commented this out because multitasker_Interrupt is crashing the system
 set pc, pop
 
 :cd_set_clock_handler

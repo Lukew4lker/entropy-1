@@ -1,0 +1,101 @@
+;INITIATE KERNEL
+;Move all initiators here, remove any push/pops, they are no longer needed, remove all SET PC, POPs
+;the kernel will simply go down this list to initiate itself,
+;then it will deallocate the memory used for these initiators.
+;The labels are only used for clarity, they should never be called.
+
+:initiate_kernel
+
+
+
+:mm_init_a			;allocate all memory, including initiators
+set a, end_of_kernel
+shr a, 9 ;div a, 512
+add a, 1
+set [page_header_start + 127], -1 ;last page reserved for stack, system stack shouldn't use more than 512 words
+jsr mm_request_memory
+
+
+
+:im_init			;initiate the interrupt manager
+ias interrupt_address
+set i, interrupt_header_start ;initiate interrupt header to -1
+:.loop_a
+sti [i], -1
+sti [i], -1
+sti [i], -1
+sti [i], -1
+ifn i, interrupt_header_end
+set pc, .loop_a
+
+
+
+:fd_init			;initiate the file driver
+hwn j
+set i, 0x0
+set z, fd_drives
+:fd_init_loop
+ hwq i
+ ife a, 0x24c5
+  ife b, 0x4fd5
+   ife c, 0x000b
+    ife x, 0x7e91
+     ife y, 0x1eb3
+	  set pc, fd_init_add
+ add i, 1
+ ifn i, j
+	set pc, fd_init_loop
+set pc, fd_init_next
+:fd_init_add
+set [z], i
+ifl z, fd_drives_end
+	add z, 6
+add i, 1
+set pc, fd_init_loop
+:fd_init_next
+
+
+
+;:fd_init_test			;It crashes. What is it supposed to do?
+;set a, 0x1
+;jsr fd_get_free_sector
+;set b, [fd_FAT]
+
+
+
+;DO NOT ALLOCATE MEMORY FROM HERE UNTIL END OF THIS FILE
+:mm_init_b			;deallocate initiators
+;to be implemented (not necessary for alpha)
+
+
+
+:cd_init			;initiate the clock, clock interrupts start after this
+hwn i
+sub i, 1
+:.loop_a
+ife i, -1
+set pc, .no_clock
+hwq i
+ife a, 0xb402
+ife b, 0x12d0
+ife c, 0x0001
+ife x, 0x0000
+ife y, 0x0000
+set pc, .found_clock
+std pc, .loop_a
+:.no_clock
+set [cd_clock_id], -1
+set pc, pop
+:.found_clock
+set [cd_clock_id], i
+set b, clock_interrupt_num
+set a, 2
+hwi i
+set a, 0
+set b, tick_length
+hwi i
+
+
+
+sub pc, 1	;Or else it randomly wanders in the first loaded function. When kernel is working, this should simply never be reached and can be removed.
+
