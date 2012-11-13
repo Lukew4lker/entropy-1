@@ -94,9 +94,9 @@ set push, A
 set push, B
 set push, C
 set A, [fd_FAT_number]
+shl A, 9
 jsr mm_request_memory
 set C, A
-mul C, 0x200
 set [fd_FAT], C
 set A, [fd_FAT_offset]
 set B, [fd_FAT_number]
@@ -127,14 +127,8 @@ ife [fd_FAT], 0x0
 set push, A
 set push, B
 set A, [fd_FAT]
-div A, 0x200
 set B, [fd_FAT_number]
-:fd_free_FAT_loop
- jsr mm_free_page
- add A, 1
- sub B, 1
- ifn B, 0x0
-	set pc, fd_free_FAT_loop
+jsr mm_free_memory
 set [fd_FAT], 0x0
 set B, pop
 set A, pop

@@ -8,12 +8,9 @@
 
 
 
-:mm_init_a			;allocate all memory, including initiators
-set a, end_of_kernel
-shr a, 9 ;div a, 512
-add a, 1
-set [page_header_start + 127], -1 ;last page reserved for stack, system stack shouldn't use more than 512 words
-jsr mm_request_memory
+:mm_init_a			;allocate all memory, including inits
+set [0x0000], 0
+set [0x0001], free_space_start
 
 
 
@@ -65,7 +62,8 @@ set pc, fd_init_loop
 
 ;DO NOT ALLOCATE MEMORY FROM HERE UNTIL END OF THIS FILE
 :mm_init_b			;deallocate initiators
-;to be implemented (not necessary for alpha)
+set [0x0000], 0xffff - free_space_start
+set [0x0001], -1
 
 
 
