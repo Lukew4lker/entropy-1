@@ -14,7 +14,10 @@
 :fd_FAT_number	dat 0x3
 :fd_root_offset	dat 0xCB
 :fd_FAT			dat 0x0
-:fd_dir_entry		dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
+:fd_dir_entry		dat 0x0, 0x0, 0x0, 0x0 
+					dat	0x0, 0x0, 0x0, 0x0
+					dat 0x0, 0x0, 0x0, 0x0
+					dat 0x0, 0x0, 0x0, 0x0
 :fd_dir_entry_end
 :fd_drives		dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
 					dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
@@ -31,58 +34,12 @@
 ;---------------------------------------------
 
 :fd_oom 	dat 0x0, 0x2345	;out of memory
-:fd_oom dat 0x0, 0x2345	;out of memory
 :fd_nes	dat 0x0, 0x3456
 
 
 ;---------------------------------------------
 ;I/O
 ;---------------------------------------------
-
-:fd_init
-set push, A
-set push, B
-set push, C
-set push, I
-set push, J
-set push, X
-set push, Y
-set push, Z
-hwn J
-set I, 0x0
-set Z, fd_drives
-:fd_init_loop
-
-:fs_init_loop
- hwq I
- ife A, 0x24c5
-  ife B, 0x4fd5
-   ife C, 0x000b
-    ife X, 0x7e91
-     ife Y, 0x1eb3
-	  set pc, fd_init_add
- add I, 1
- add I, 0x1
- ifn I, J
-	set pc, fd_init_loop
-set Z, pop
-set Y, pop
-set X, pop
-set J, pop
-set I, pop
-set C, pop
-set B, pop
-set A, pop
-set pc, pop
-
-:fd_init_add
-set [Z], I
-ifl Z, fd_drives_end
-	add Z, 6
-add I, 1
-	add Z, 0x1
-add I, 0x1
-set pc, fd_init_loop
 
 :fd_write_sector
 set push, Z
@@ -111,7 +68,7 @@ set A, Z
  add Y, 0x200
  sub C, 1
  ifn C, 1
- hwi [fd_drive]
+ hwi [fd_drive_cur]
  ifn B, 0x1
 	set pc, fd_load_sector_loop
  add Y, 0x200
@@ -137,9 +94,9 @@ set push, A
 set push, B
 set push, C
 set A, [fd_FAT_number]
+shl A, 9
 jsr mm_request_memory
 set C, A
-mul C, 0x200
 set [fd_FAT], C
 set A, [fd_FAT_offset]
 set B, [fd_FAT_number]
@@ -170,14 +127,8 @@ ife [fd_FAT], 0x0
 set push, A
 set push, B
 set A, [fd_FAT]
-div A, 0x200
 set B, [fd_FAT_number]
-:fd_free_FAT_loop
- jsr mm_free_page
- add A, 1
- sub B, 1
- ifn B, 0x0
-	set pc, fd_free_FAT_loop
+jsr mm_free_memory
 set [fd_FAT], 0x0
 set B, pop
 set A, pop
@@ -186,9 +137,7 @@ set pc, pop
 :fd_get_FAT_entry	;A - sector number
 jsr fd_load_FAT
 add A, [fd_FAT]
-set push, A
-set A, [peek]
-set ex, pop
+set A, [A]
 set pc, pop
 
 :fd_get_free_sector	;A - a free sector or 0xFFFF if none
@@ -196,12 +145,12 @@ set push, X
 set push, Y
 set push, Z
 set Y, 0x59F
-sub Y, [fs_root_offset]
+sub Y, [fd_root_offset]
 jsr fd_load_FAT
-set Z, [fs_FAT]
+set Z, [fd_FAT]
 add Z, 0x1FF
 set A, [Z]
-add A, [fs_FAT]
+add A, [fd_FAT]
  :fd_get_free_sector_loop
  ife [A], 0x0
 	set pc, fd_get_free_sector_end
@@ -210,7 +159,7 @@ add A, [fs_FAT]
 	jsr fd_get_free_sector_bound
  ifn X, 0x2
 	set pc, fd_get_free_sector_loop
- sub A, [fs_FAT]
+ sub A, [fd_FAT]
  set [Z], A
  set Z, pop
  set Y, pop
@@ -218,7 +167,7 @@ add A, [fs_FAT]
  set A, 0xFFFF
  set pc, pop
  :fd_get_free_sector_end
- sub A, [fs_FAT]
+ sub A, [fd_FAT]
  set [Z], A
  set Z, pop
  set Y, pop
@@ -226,7 +175,7 @@ add A, [fs_FAT]
  set pc, pop
  
 :fd_get_free_sector_bound
-set A, [fs_FAT]
+set A, [fd_FAT]
 add X, 0x1 
 set pc, pop
 
@@ -235,8 +184,44 @@ set pc, pop
 ;---------------------------------------------
 
 :fd_create_file	;A - file length
+ife A, 0x0
+	set pc, pop
+set push, B
+set push, C
+set push, I
+set push, J
+set B, 0x0
+set C, 0x0
+set I, 0x0
+set J, A
+	:fd_create_file_loop
+	jsr fd_get_free_sector
+	ife C, 0x0
+		set C, A
+	ife A, 0xFFFF
+		jsr fd_nes
+	add A, [fd_FAT]
+	set [A], B
+	sub A, [fd_FAT]
+	set B, A
+	add I, 0x1
+	ifn I, J
+		set pc, fd_create_file_loop
+add A, [fd_FAT]
+set [A], 0xFFFF
+set A, C
+jsr fd_update_FAT
+set J, pop
+set I, pop
+set C, pop
+set B, pop
+set pc, pop	
+	
+:fd_delete_file	;A - starting cluster
+set push, B
+set push, I
 
-:fd_delete_file
+
 
 :fd_open_file ; Open file A for reading and writing.
 :fd_close_file ; Close file A.

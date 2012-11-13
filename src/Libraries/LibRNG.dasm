@@ -11,7 +11,7 @@
 ; This library will become functional once table locations for Entropy kernel
 ; functions are decided.
 
-:lib_rng ; MD2 optimized for 1 word messages.
+:lib_rng ; MD2 optimized for 2 word messages.
 
 :lib_rng_wrapper
     SET PUSH, I

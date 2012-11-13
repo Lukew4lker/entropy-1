@@ -1,34 +1,10 @@
-;by: Lucus
-
-;TODO:
-; - Test if it all works like it's supposed to...
-
-;INTERRUPT MANAGER supports up to 16 processes
+;INTERRUPT MANAGER by Lucus
 
 ;Implements dynamic interrupt handling for kernel and processes, also implements communication through signals.
 
-;FUNCTIONS:
+;For documentation, see the Entropy Scope doc, see issue 7 to find it.
 
-;fn_request_handler ;Arguments: A=signal handler address, Return: A=interrupt to be used or -1 if no space
-;requests a handler to be used by a piece of hardware. KERNEL-ONLY. Make sure [current_process]=0
-
-;fn_request_handler ;Arguments: A=signal to be sent, Return: A=interrupt to be used or -1 if no space
-;requests a handler to be used by a piece of hardware. PROCESS-ONLY
-
-;fn_free_handler ;Arguments: A=interrupt to be freed, Return: None
-;frees the handler for interrupt A, allowing it to be reused
-
-;fn_set_signal_handler ;Arguments: A=signal handler location, Return: None
-;sets the signal handler for current_process
-
-;fn_send_signal ;Arguments: A=target process, B=signal to be sent, Return: A=0 on success, errno on failure
-;Sends a signal to process A with message B
-
-;fn_init_IM ;Arguments: None, Return: None.
-;initiates the interrupt manager
-
-;fn_check_signals ;Arguments: None, Return: None.
-;check for signals at start of runningtime of current_process
+;NOTE: THIS CODE WORKS BUT HAS NOT BEEN MADE SAFE FOR PREEMPTION YET.
 
 ;signal handlers get JSRd to with Arguments: A=signal number, B=signal sender
 
@@ -38,35 +14,21 @@
 #define ERR_missed_interrupts	0x0104	;semi-random for now
 #define ERR_signal_queue_full	0x0105	;
 
-:fn_request_handler_k ;Arguments: A=signal handler address, Return: A=interrupt to be used or -1 if no space
-set push, b
-iaq 1
-set b, interrupt_header_start
-:.loop_a
-ife [b], -1
-set pc, .found_space
-ife b, interrupt_header_end - 2
-set pc, .no_space
-add b, 2
-set pc, .loop_a
-:.found_space
-set [b], 0
-set [b+1], a
-add pc, 1 ;skip set a, -1
-:.no_space
-set a, -1
-iaq 0
-set b, pop
+:im_request_handler_k ;Arguments: A=signal handler address, Return: A=interrupt to be used or -1 if no space
+set push, [current_process]
+set [current_process], 0
+jsr im_free_handler
+set [current_process], pop
 set pc, pop
 
-:fn_free_handler ;Arguments: A=interrupt to be freed, Return: None
+:im_free_handler ;Arguments: A=interrupt to be freed, Return: None
 shl a, 1 ;mul a, 2
 add a, interrupt_header_start
 set [a], -1
 set [a+1], -1
 set pc, pop
 
-:fn_request_handler ;Arguments: A=signal to be sent, Return: A=interrupt to be used or -1 if no space
+:im_request_handler ;Arguments: A=signal to be sent, Return: A=interrupt to be used or -1 if no space
 set push, b
 iaq 1
 set b, interrupt_header_start
@@ -91,7 +53,7 @@ set b, pop
 set pc, pop
 
 ;Sets the signal handler for the current process
-:fn_set_signal_handler ;Arguments: A=signal handler location, Return: None
+:im_set_signal_handler ;Arguments: A=signal handler location, Return: None
 set push, b
 set b, [current_process]
 add b, signal_handler_table_start
@@ -99,24 +61,7 @@ set [b], a
 set b, pop
 set pc, pop
 
-;Initiates the interrupt manager
-:fn_init_IM ;Arguments: None, Return: None.
-set push, i
-set push, j
-ias interrupt_address
-set i, interrupt_header_start ;initiate interrupt header to -1
-:.loop_a
-sti [i], -1
-sti [i], -1
-sti [i], -1
-sti [i], -1
-ifn i, interrupt_header_end
-set pc, .loop_a
-set j, pop
-set i, pop
-set pc, pop
-
-:fn_check_signals ;Arguments: None, Return: None.
+:im_check_signals ;Arguments: None, Return: None.
 set push, a
 set push, b
 set push, c
@@ -166,7 +111,7 @@ set b, pop
 set a, pop
 set pc, pop
 
-:fn_send_signal ;Arguments: A=target process, B=signal to be sent, Return: A=0 on success, errno on failure
+:im_send_signal ;Arguments: A=target process, B=signal to be sent, Return: A=0 on success, errno on failure
 set push, c
 iaq 1
 shl a, 5 ;mul a, 32
@@ -192,10 +137,16 @@ set pc, pop
 
 ;Handles actual interrupts
 :interrupt_address ;A=interrupt
+set push, ex
+ifn a, clock_interrupt_num
+set pc, not_clock
+jsr cd_interrupt_handler
+set ex, pop
+rfi 0
+:not_clock
 set push, b
 set push, c
 set push, x
-iaq 1
 set b, a
 shl b, 1 ;mul b, 2
 add b, interrupt_header_start
@@ -233,22 +184,19 @@ set pc, .finish
 set a, [b]
 shl a, 1 ;mul x, 2
 
-;SHOULD COMPILE FINE, ERROR WITH ORGANIC
-;set a, [a + (interrupt_header_start + 1)]
-;This will work for now
-add a, (interrupt_header_start + 1)
-set a, [a]
-;End hotfix
+;SHOULD COMPILE FINE, ERROR WITH ORGANIC	changed hotfix
+.define interrupt_header_start_plus_one interrupt_header_start + 1
+set a, [a + interrupt_header_start_plus_one]
 set c, [b]
 add c, signal_handler_table_start
 jsr [c]
 ;set pc, .finish
 :.no_handler ;return without doing anything
 :.finish
-iaq 0
 set x, pop
 set c, pop
 set b, pop
+set ex, pop
 rfi 0
 
 ;DATA
