@@ -2,215 +2,36 @@
 
 ;Implements dynamic interrupt handling for kernel and processes, also implements communication through signals.
 
-;For documentation, see the Entropy Scope doc, see issue 7 to find it.
-
-;NOTE: THIS CODE WORKS BUT HAS NOT BEEN MADE SAFE FOR PREEMPTION YET.
-
-;signal handlers get JSRd to with Arguments: A=signal number, B=signal sender
-
-;DEFINES:
-#define max_proc_num			16		;changing these will break the code
-#define sigs_per_proc			16
-#define ERR_missed_interrupts	0x0104	;semi-random for now
-#define ERR_signal_queue_full	0x0105	;
-
-:im_request_handler_k ;Arguments: A=signal handler address, Return: A=interrupt to be used or -1 if no space
-set push, [current_process]
-set [current_process], 0
-jsr im_free_handler
-set [current_process], pop
-set pc, pop
-
-:im_free_handler ;Arguments: A=interrupt to be freed, Return: None
-shl a, 1 ;mul a, 2
-add a, interrupt_header_start
-set [a], -1
-set [a+1], -1
-set pc, pop
-
-:im_request_handler ;Arguments: A=signal to be sent, Return: A=interrupt to be used or -1 if no space
-set push, b
-iaq 1
-set b, interrupt_header_start
-:.loop_a
-ife [b], -1
-set pc, .found_space
-ife b, interrupt_header_end - 2
-set pc, .no_space
-add b, 2
-set pc, .loop_a
-:.found_space
-set [b], [current_process]
-set [b+1], a
-set a, b
-sub a, interrupt_header_start
-shr a, 1 ;div a, 2
-add pc, 1 ;skip set a, -1
-:.no_space
-set a, -1
-iaq 0
-set b, pop
-set pc, pop
-
-;Sets the signal handler for the current process
-:im_set_signal_handler ;Arguments: A=signal handler location, Return: None
-set push, b
-set b, [current_process]
-add b, signal_handler_table_start
-set [b], a
-set b, pop
-set pc, pop
-
-:im_check_signals ;Arguments: None, Return: None.
-set push, a
-set push, b
-set push, c
-set push, i
-set push, j
-iaq 1
-set i, [current_process]
-set j, 0
-set c, i
-set c, [c+signal_handler_table_start] ;c=signal handler address
-ife c, 0
-set pc, .done ;nothing to do here, there is no handler
-;add c, signal_handler_table_start
-shl i, 5 ;mul i, 32
-add i, signal_table_start ;[i]=first signal
-:.loop_a
-sti a, [i]
-ife a, 0
-set pc, .cleanup
-sti b, [i]
-jsr c
-ifn j, 32
-set pc, .loop_a
-:.cleanup
-sub i, j
-add j, i
-set c, i
-add c, (sigs_per_proc * 2) - 2
-:.loop_b ;i=signal_table_start+32*[current_process], j=i+2*handled_signals, c=i+2*sigs_per_proc
-sti [i], [j]
-sti [i], [j]
-ife [j], 0
-set pc, .loop_c
-ifn j, c
-set pc, .loop_b
-:.loop_c
-sti [i], 0
-sti [i], 0
-ifn i, c
-set pc, .loop_c
-:.done
-iaq 0
-set j, pop
-set i, pop
-set c, pop
-set b, pop
-set a, pop
-set pc, pop
-
-:im_send_signal ;Arguments: A=target process, B=signal to be sent, Return: A=0 on success, errno on failure
-set push, c
-iaq 1
-shl a, 5 ;mul a, 32
-add a, signal_table_start - 1
-set c, a
-add c, sigs_per_proc * 2
-:.loop_a
-add a, 1
-ife a, c
-set pc, .no_space
-ifn [a], 0
-set pc, .loop_a
-;found_space
-set [a], b
-set [a+1], [current_process]
-set a, 0
-add pc, 2
-:.no_space
-set a, ERR_signal_queue_full
-iaq 0
-set c, pop
-set pc, pop
-
-;Handles actual interrupts
-:interrupt_address ;A=interrupt
+:im_interrupt_handler
 set push, ex
-ifn a, clock_interrupt_num
-set pc, not_clock
-jsr cd_interrupt_handler
-set ex, pop
-rfi 0
-:not_clock
 set push, b
-set push, c
-set push, x
-set b, a
-shl b, 1 ;mul b, 2
-add b, interrupt_header_start
-ife [b], -1
+hwn b
+sub b, 1
+ifg a, b
 set pc, .no_handler
-ife [b], 0
-set pc, .kernel_handler
-ife [b], [current_process]
-set pc, .current_handler
-;.process_handler, queue interrupt
-set c, [b] ;c=handler proc
-shl c, 5 ;mul c, 32
-add c, signal_table_start
-set x, c
-add x, sigs_per_proc
-:.loop_a
-ife c, x
-set pc, .queue_overflow
-ife [c], 0
-set pc, .found_space
-add c, 2
-set pc, .loop_a
-:.queue_overflow
-sub c, 2
-set [c], ERR_missed_interrupts
-set pc, .finish
-:.found_space
-set [c], [b+1]
-set [c+1], 0
-set pc, .finish
-:.kernel_handler ;raise interrupt immediately
-jsr [b+1]
-set pc, .finish
-:.current_handler ;raise interrupt immediately
-set a, [b]
-shl a, 1 ;mul x, 2
-
-;SHOULD COMPILE FINE, ERROR WITH ORGANIC	changed hotfix
-.define interrupt_header_start_plus_one interrupt_header_start + 1
-set a, [a + interrupt_header_start_plus_one]
-set c, [b]
-add c, signal_handler_table_start
-jsr [c]
-;set pc, .finish
-:.no_handler ;return without doing anything
-:.finish
-set x, pop
-set c, pop
+set b, [im_table_address]
+add b, a
+ifn [b], 0
+jsr [b]
+:.no_handler	;fail silently
 set b, pop
 set ex, pop
 rfi 0
 
-;DATA
-:interrupt_header_start ;stores handlers
-;0x0 handler process
-;0x1 handler address if prev is 0, handler message otherwise
-#reserve 32		;max 16 custom interrupts
-:interrupt_header_end
+:im_request_handler
+add a, [im_table_address]
+ifn [a], 0
+set pc, .already_in_use
+set [a], b
+set a, 0		;success
+set pc, pop
+:.already_in_use
+set a, err_already_in_use
+set pc, pop
 
-:signal_handler_table_start
-;0x0 handler for process
-#reserve 16
+:im_free_handler
+add a, [im_table_address]
+set [a], 0
+set pc, pop
 
-:signal_table_start ;stores signal queues
-;0x0 signal number
-;0x1 signal sender
-#reserve 512	;max_processes * signals_per_process * 2
+:im_table_address	.dat 0x0000

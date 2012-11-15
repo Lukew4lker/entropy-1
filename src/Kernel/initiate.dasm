@@ -15,15 +15,10 @@ set [0x0001], free_space_start
 
 
 :im_init			;initiate the interrupt manager
-ias interrupt_address
-set i, interrupt_header_start ;initiate interrupt header to -1
-:.loop_a
-sti [i], -1
-sti [i], -1
-sti [i], -1
-sti [i], -1
-ifn i, interrupt_header_end
-set pc, .loop_a
+hwn a
+jsr mm_request_memory
+set [im_table_address], a
+ias im_interrupt_handler
 
 
 

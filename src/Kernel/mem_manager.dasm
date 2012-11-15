@@ -6,8 +6,6 @@
 
 ;NOTE: THIS CODE WORKS BUT HAS NOT BEEN MADE SAFE FOR PREEMPTION YET.
 
-.define err_does_not_exist 0x107
-
 :mm_request_memory
 set push, b
 set push, c
@@ -61,6 +59,33 @@ sub [b], [b+1]
 set [b+1], [a+1]
 set a, 0
 set b, pop
+set pc, pop
+
+:mm_grow_memory
+sub a, 2
+ifg b, [a]
+set pc, .no_space
+sub [a], b
+set pc, pop
+:.no_space
+set a, err_out_of_space
+set pc, pop
+
+:mm_shrink_memory
+set push, c
+sub a, 2
+set c, [a+1]
+sub c, a
+sub c, [a]
+sub c, 3
+ifg b, c
+set pc, .none_left
+add [a], b
+set c, pop
+set pc, pop
+:.none_left
+set a, err_underflow
+set c, pop
 set pc, pop
 
 :current_process	.dat 0x0000

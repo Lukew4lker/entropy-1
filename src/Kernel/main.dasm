@@ -9,12 +9,14 @@ set pc, initiate_kernel		;see initiate.dasm
 
 ;INCLUDES
 
+#include "defines.dasm"
 #include "mem_manager.dasm"
 #include "multitasker.dasm"
 #include "int_manager.dasm"
 #include "utilities.dasm"
 #include "filesystem.dasm"
 #include "clock_driver.dasm"
+#include "sig_manager.dasm"
 ;#include "lib_STDIO.dasm
 :free_space_start
 .dat 0xffff - end_of_kernel, 0xffff		;needed for memory manager.
