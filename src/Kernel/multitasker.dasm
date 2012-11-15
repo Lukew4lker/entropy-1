@@ -69,7 +69,7 @@
 	SET PC, POP
 	
 ;@name multitasker_Interrupt
-;handles the main interrupt
+;handles the main interrupt NOTE: From top, stack is: PC (stay), PC (stay), A (replace), PC (replace)
 ;@see thePalindrome
 :multitasker_Interrupt
     SET PUSH, A
@@ -87,17 +87,13 @@
 	ADD A, 1
 	SET [A], POP
 	ADD A, 1
-	SET B, SP
-	ADD B, 4
-	SET [A], [B]
+	SET [A], B
 	ADD A, 1
-	SUB B, 1
-	SET [A], [B]
+	SET [A], C
 	ADD A, 1
 	SET [A], I
 	ADD A, 1
-	SUB B, 1
-	SET [A], [B]
+	SET [A], X
 	ADD A, 1
 	SET [A], Y
 	ADD A, 1
@@ -105,55 +101,40 @@
 	ADD A, 1
 	SET [A], J
 	
-	ADD B, 6 ;B now points to the location in the Stack where the old program was running
-	SUB A, 9
+	SET B, SP
+	ADD B, 3 ;B now points to the location in the Stack where the old program was running
+	ADD A, 1
 	SET [A], [B]
 	
-	ADD A, 10
-	ADD B, 1
+	SUB B, 3
 	SET [A], B ; SP has been saved for the new program
-	SUB B, 1
-	
-	SET A, multitasker_Progs_0
-	SET PUSH, B
-	SET B, [multitasker_curProg]
-	MUL B, 0xB
-	ADD A, B
-	SET B, POP
+	SUB A, 10
 	
 	ADD [multitasker_curProg], 1
 	ADD A, 0xB
-	IFE [A], 0 ;If there's no program loaded
-	    SUB PC, 5
+	IFL multitasker_Progs_end, A
+	    SET A, multitasker_Progs_0
+	IFE [A], 0 ;If there's no program loaded (+1 code of hangs-if-no-programs-available)
+	    SUB PC, 7
 		
-	SET A, multitasker_Progs_0
-	SET PUSH, B
-	SET B, [multitasker_curProg]
-	MUL B, 0xB
-	ADD A, B
-	SET B, POP
-	SET [B], [A] ;The stack will now return to the new program
-	ADD A, 1
+	ADD A, 10 ; THIS IS THE PART WHERE WE LOAD A NEW PROGRAM
+	SET SP, [A] ;The stack will now return to the new program
+	SUB A, 9
 	SET [A], 14 ; each program gets 14 ticks
-	ADD A, 1 ; A now points to the A register of the new program
-	SUB B, 2 ; B now points to the stack where the B register is kept
-	SUB B, 2 ; B now points to the stack where the X register is kept
-	ADD A, 7 ; A now points to the J register of the new program
+	ADD A, 8 ; A now points to the J register of the new program
 	SET J, [A]
 	SUB A, 1
 	SET Z, [A]
 	SUB A, 1
 	SET Y, [A]
 	SUB A, 1
-	SET [B], [A] ;setting X
+	SET X, [A]
 	SUB A, 1
-	ADD B, 1 ; B now points to the stack where the C register is kept
 	SET I, [A]
 	SUB A, 1
-	SET [B], [A] ;setting C
+	SET C, [A]
 	SUB A, 1
-	ADD B, 1
-	SET [B], [A]
+	SET B, [A]
 	SUB A, 1
 	SET A, [A]
 	SET [current_process], [multitasker_curProg]
@@ -184,3 +165,4 @@
 :multitasker_Progs_13 dat 0,0,0,0,0,0,0,0,0,0,0
 :multitasker_Progs_14 dat 0,0,0,0,0,0,0,0,0,0,0
 :multitasker_Progs_15 dat 0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_end
