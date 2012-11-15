@@ -267,9 +267,80 @@ set B, pop
 set pc, pop	
 	
 :fd_delete_file	;A - starting cluster
-set push, B
-set push, I
 
+:fd_get_file_length	;args: A - starting cluster, output A - length
+set push, I
+set I, 0x0
+:.loop
+add I, 0x1
+jsr fd_get_FAT_entry
+ifn A, 0xFFFF
+	ifl I, 0x5A0
+	set pc, .loop
+set A, I
+set I, pop
+set pc, pop
+
+
+
+
+
+
+
+:fd_load_file_pop_return_error	;in case of not enough memory to load a file
+set ex, pop
+set ex, pop
+set ex, pop
+set ex, pop
+set ex, pop
+set ex, pop
+set ex, 0x0
+set pc, pop
+
+
+
+
+
+
+:fd_load_file	;args: A - starting cluster of the file to load. output: A - address of loaded file
+set push, B
+set push, C
+set push, I
+set push, X
+set push, Y
+set push, A
+jsr fd_get_file_length
+mul A, 0x200
+jsr mm_request_memory
+ife a, 0x0	;error detection
+    set pc, fd_load_file_pop_return_error
+set X, A
+set Y, A
+set A, pop
+set I, 0x0
+
+
+:.loop
+add I, 0x1
+set B, 0x1
+set C, X
+add A, [fd_root_offset]
+jsr fd_load_sector
+add X, 0x200
+sub A, [fs_root_offset]
+set B, A
+jsr fd_get_FAT_entry
+ifn A, 0xFFFF
+	ifl I, 0x5A0
+		set pc, .loop
+
+set A, Y
+set Y, pop
+set X, pop
+set I, pop
+set C, pop
+set B, pop
+set pc, pop
 
 
 :fd_open_file ; Open file A for reading and writing.
