@@ -290,6 +290,36 @@ set C, pop
 set B, pop
 set pc, pop
 
+:fd_edit_file	;args: A - starting cluster of the file to edit; B - address in memory to write from
+set push, A
+set push, B
+set push, C
+set push, I
+set push, X
+set push, A
+set A, pop
+set I, 0x0
+
+:.loop
+add I, 0x1
+set B, 0x1
+set C, X
+add A, [fd_root_offset]
+jsr fd_write_sector
+add X, 0x200
+sub A, [fs_root_offset]
+set B, A
+jsr fd_get_FAT_entry
+ifn A, 0xFFFF
+	ifl I, 0x5A0
+		set pc, .loop
+		
+set X, pop
+set I, pop
+set C, pop
+set B, pop
+set A, pop
+set pc, pop
 
 :fd_open_file ; Open file A for reading and writing.
 :fd_close_file ; Close file A.
