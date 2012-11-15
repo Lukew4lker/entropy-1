@@ -6,177 +6,61 @@
 
 ;NOTE: THIS CODE WORKS BUT HAS NOT BEEN MADE SAFE FOR PREEMPTION YET.
 
-;DEFINES:
-#define max_process_num		16 ;The maximum amount of processes this supports, also change corresponding value in data section.
-#define err_unknown			0x100 ;start at 0x100 to ensure no short words are used, that could result in problems with some code.
-#define err_no_permission	0x101
+.define err_does_not_exist 0x107
 
-:mm_init ;Arguments: None, Return: None
-set push, a
-set a, free_space_start
-shr a, 9 ;div a, 512
-add a, 1
-set [page_header_start + 127], -1 ;last page reserved for stack, system stack shouldn't use more than 512 words
-jsr mm_request_memory
-set a, pop
-set pc, pop
-
-:mm_request_memory ;Arguments: A=number_of_pages, Return: A=first_allocated_page (-1=no_space)
+:mm_request_memory
 set push, b
 set push, c
-set b, page_header_start
-set c, 0
+add a, 1
+set b, 0
 :.loop_a
-ife [b], 0
-add c, 1
-ifn [b], 0
-set c, 0
-ife c, a
+ifg [b], a
 set pc, .found_space
-ife b, page_header_start + 127
-set pc, .no_space
-add b, 1
+set b, [b+1]
+ifn b, 0xffff
 set pc, .loop_a
-:.found_space
-set c, b
-sub c, a
-add c, 1
-set [b], -1
-:.loop_b ;a=#pages, b=lastpage, c=firstpage
-ife b, c
-set pc, .do_header
-set [b + -1], b
-sub [b + -1], page_header_start
-sub b, 1
-set pc, .loop_b
-:.do_header
-set a, b
-sub a, page_header_start
-set b, [current_process]
-add b, process_first_pages_start
-:.loop_c
-ife [b], -1
-set pc, .found_end
-set b, [b]
-add b, page_header_start
-set pc, .loop_c
-:.found_end
+;no_space
+set a, 0xffff
+set c, pop
+set b, pop
+set pc, pop
+:.found_space ;b=start of section header
+set c, a
+set a, [b]
+sub a, c
+sub a, 1
+set c, [b+1]
+sub [b+1], [b]
+set [b], 0
+set b, [b+1]
 set [b], a
-add pc, 1 ;skip set a, -1
-:.no_space
-set a, -1
+set [b+1], c
+set a, b
+add a, 2
 set c, pop
 set b, pop
 set pc, pop
 
-:mm_clear_process ;Arguments: A=process, Return: A=0 on success, errno on failure
+:mm_free_memory
 set push, b
-set a, [a + process_first_pages_start]
-:.loop_a ;a=firstpage
-add a, page_header_start
-ife [a], -1
-set pc, .done
-set b, [a]
-set [a], 0
-set a, b
+sub a, 2
+set b, 0
+:.loop_a
+ife [b+1], a
+set pc, .found_it
+set b, [b+1]
+ifn b, -1
 set pc, .loop_a
-:.done
-set [a], 0
+;section does not exist
+set a, err_does_not_exist
 set b, pop
 set pc, pop
-
-:mm_free_page ;Arguments: A=freed_page, Return: A=0 on success, errno on failure
-set push, b
-set b, [current_process]
-shl b, 5
-set b, [b + process_first_pages_start]
-:.loop_a
-add b, page_header_start
-ife [b], a
-set pc, .found_it
-ife [b], -1
-set pc, .not_owned
-set b, [b]
-set pc, .loop_a
 :.found_it
-add a, page_header_start
-set [b], [a]
-set [a], 0
+add [b], [a+1]
+sub [b], [b+1]
+set [b+1], [a+1]
 set a, 0
 set b, pop
 set pc, pop
-:.not_owned ;Process tried to free page owned by another process
-;This check is implemented, because not implementing it would require more code.
-set a, err_no_permission
-set b, pop
-set pc, pop
 
-:mm_clear_page ;Arguments A=page, Return: None.
-set push, i
-set push, j
-shl a, 9
-set i, a
-add a, 512
-:.loop_a
-sti [i], 0
-sti [i], 0
-sti [i], 0
-sti [i], 0
-sti [i], 0 ;
-sti [i], 0 ;
-sti [i], 0 ;
-sti [i], 0 ;
-sti [i], 0
-sti [i], 0
-sti [i], 0
-sti [i], 0
-sti [i], 0 ;
-sti [i], 0 ;
-sti [i], 0 ;
-sti [i], 0 ;
-ifn i, a
-set pc, .loop_a
-set j, pop
-set i, pop
-set pc, pop
-
-:mm_copy_page ;Arguments: A=source page, B=destination page, Return: None
-set push, i
-set push, j
-shl a, 9
-shl b, 9
-set i, a
-set j, b
-add a, 512
-:.loop_a
-sti [i], [j]
-sti [i], [j]
-sti [i], [j]
-sti [i], [j]
-sti [i], [j] ;
-sti [i], [j] ;
-sti [i], [j] ;
-sti [i], [j] ;
-sti [i], [j]
-sti [i], [j]
-sti [i], [j]
-sti [i], [j]
-sti [i], [j] ;
-sti [i], [j] ;
-sti [i], [j] ;
-sti [i], [j] ;
-ifn i, a
-set pc, .loop_a
-set j, pop
-set i, pop
-set pc, pop
-
-;DATA
-:page_header_start ;To store the next page of every page, 0xffff=last page of process.
-.reserve 128
-
-:process_first_pages_start ;To store the first page of every process
-.reserve 16 ;=max_process_num, update this when that changes.
-
-:current_process ;The process currently running, between 0 and max_process_num-1.
-.dat 0x0000 ;Process manager should keep this up to date
+:current_process	.dat 0x0000
