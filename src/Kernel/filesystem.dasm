@@ -307,7 +307,7 @@ set C, X
 add A, [fd_root_offset]
 jsr fd_write_sector
 add X, 0x200
-sub A, [fs_root_offset]
+sub A, [fd_root_offset]
 set B, A
 jsr fd_get_FAT_entry
 ifn A, 0xFFFF
