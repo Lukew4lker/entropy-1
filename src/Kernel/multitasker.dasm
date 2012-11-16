@@ -11,7 +11,7 @@
 ;@returns A the program ID (needed to kill it), -1 if there wasn't room
 ;@see thePalindrome	
 :multitasker_addProg ; TODO, load the program into memory
-    JSR fd_load_prog think there's 
+    JSR fd_load_prog
     SET PUSH, B
 	SET PUSH, C
 	SET C, 0
