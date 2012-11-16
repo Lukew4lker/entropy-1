@@ -54,12 +54,6 @@ set pc, fd_init_loop
 ;set b, [fd_FAT]
 
 
-
-;DO NOT ALLOCATE MEMORY FROM HERE UNTIL END OF THIS FILE
-:mm_init_b			;deallocate initiators
-set [0x0000], 0xffff - free_space_start
-set [0x0001], -1
-
 :pm_init
 SET B, multitasker_Progs_0
 ADD B, 10
@@ -75,6 +69,12 @@ ADD B, 12
 ADD C, 1
 IFL C, 15
 	SET PC, pm_init_loop
+
+
+;DO NOT ALLOCATE MEMORY FROM HERE UNTIL END OF THIS FILE
+:mm_init_b			;deallocate initiators
+set [0x0000], 0xffff - free_space_start
+set [0x0001], -1
 
 
 :cd_init			;initiate the clock, clock interrupts start after this
