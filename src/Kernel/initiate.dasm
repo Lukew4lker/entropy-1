@@ -60,6 +60,21 @@ set pc, fd_init_loop
 set [0x0000], 0xffff - free_space_start
 set [0x0001], -1
 
+:pm_init
+SET B, multitasker_Progs_0
+ADD B, 10
+SET C, 0
+:pm_init_loop ;allocate stack for the processes
+SET A, 20
+JSR mm_request_memory
+ADD A, 19
+SET [B], A
+ADD B, 1
+SET [B], A
+ADD B, 12
+ADD C, 1
+IFL C, 15
+	SET PC, pm_init_loop
 
 
 :cd_init			;initiate the clock, clock interrupts start after this

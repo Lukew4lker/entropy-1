@@ -17,7 +17,7 @@ add [cd_sys_time], 1
 :no_second_passed
 ifn [cd_clock_handler], 0
 jsr [cd_clock_handler]
-;jsr multitasker_Interrupt				;Add multitasker function that should be called every tick here.
+jsr multitasker_Interrupt				;Add multitasker function that should be called every tick here.
 ;commented this out because multitasker_Interrupt is crashing the system
 set pc, pop
 

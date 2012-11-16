@@ -11,7 +11,7 @@
 ;@returns A the program ID (needed to kill it), -1 if there wasn't room
 ;@see thePalindrome	
 :multitasker_addProg ; TODO, load the program into memory
-    JSR fd_load_prog
+    JSR fd_load_prog think there's 
     SET PUSH, B
 	SET PUSH, C
 	SET C, 0
@@ -19,7 +19,7 @@
 	SUB B, 0xB
 	
 	ADD C, 1
-	ADD B, 0xB
+	ADD B, 0xC
 	IFN [B], 0
 	    IFL 0xF, C
 	        SUB PC, 5 ; B now points to an empty program slot
@@ -65,8 +65,10 @@
 	SET [A], 0
 	ADD A, 1
 	SET [A], 0
-	ADD A, 1
-	SET [A], 0
+	ADD A, 2
+	SET PUSH, [A]
+	SUB A, 1
+	SET [A], POP
 	SET PC, POP
 	
 ;@name multitasker_Interrupt
@@ -77,7 +79,7 @@
 	SET A, multitasker_Progs_0
 	SET PUSH, B
 	SET B, [multitasker_curProg]
-	MUL B, 0xB
+	MUL B, 0xC
 	ADD A, B
 	SET B, POP ;at this point, A points to multitasker_Progs_(number of cur prog)
 	ADD A, 1
@@ -107,12 +109,12 @@
 	ADD A, 1
 	SET [A], [B]
 	
-	SUB B, 3
+	ADD B, 1
 	SET [A], B ; SP has been saved for the new program
 	SUB A, 10
 	
 	ADD [multitasker_curProg], 1
-	ADD A, 0xB
+	ADD A, 0xC
 	IFL multitasker_Progs_end, A
 	    SET A, multitasker_Progs_0
 	IFE [A], 0 ;If there's no program loaded (+1 code of hangs-if-no-programs-available)
@@ -136,7 +138,15 @@
 	SET C, [A]
 	SUB A, 1
 	SET B, [A]
-	SUB A, 1
+	SUB A, 2
+	SUB B, 2
+	SET PUSH, [A]
+	SET PUSH, [B]
+	SUB B, 1
+	SET PUSH, [B]
+	SET B, 1
+	SET PUSH, [B]
+	ADD A, 1
 	SET A, [A]
 	SET [current_process], [multitasker_curProg]
 		
@@ -150,20 +160,21 @@
 ;How many ticks are left
 ;Registers (ABCIXYZJ)
 ;Where the stack is hiding
-:multitasker_Progs_0 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_1 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_2 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_3 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_4 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_5 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_6 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_7 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_8 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_9 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_10 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_11 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_12 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_13 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_14 dat 0,0,0,0,0,0,0,0,0,0,0
-:multitasker_Progs_15 dat 0,0,0,0,0,0,0,0,0,0,0
+;Where the bottom of the stack is hiding
+:multitasker_Progs_0 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_1 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_2 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_3 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_4 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_5 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_6 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_7 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_8 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_9 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_10 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_11 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_12 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_13 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_14 dat 0,0,0,0,0,0,0,0,0,0,0,0
+:multitasker_Progs_15 dat 0,0,0,0,0,0,0,0,0,0,0,0
 :multitasker_Progs_end
