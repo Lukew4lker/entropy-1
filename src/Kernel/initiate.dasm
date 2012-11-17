@@ -111,3 +111,9 @@ hwi i
 
 sub pc, 1	;Or else it randomly wanders in the first loaded function. When kernel is working, this should simply never be reached and can be removed.
 
+
+
+:init
+;load program /init.bin from disk
+jsr multitasker_addProg
+set [multitasker_preemption_lock], 0

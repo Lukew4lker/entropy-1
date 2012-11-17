@@ -31,7 +31,6 @@
 	SET B, POP
 	SET PC, POP
 	
-	SET [multitasker_hasProg], 1
 	SET [B], A
 	
 	SET A, B
