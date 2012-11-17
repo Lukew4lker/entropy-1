@@ -8,7 +8,7 @@
 ;=============================================
 ;VARIABLES
 ;=============================================
-:fd_drive_cur 		dat 0x0
+:fd_drive_cur 	dat 0x0
 :fd_dir	  		dat 0x0
 :fd_FAT_offset	dat 0xC8
 :fd_FAT_number	dat 0x3
@@ -19,13 +19,11 @@
 					dat 0x0, 0x0, 0x0, 0x0
 					dat 0x0, 0x0, 0x0, 0x0
 :fd_dir_entry_end
-:fd_drives		dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
-					dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
-					dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
-					dat 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
-:fd_drives_end
-:fd_boot_drive	dat 0x0	;Gets loaded by main, before initiate_kernel
+:fd_drive_table	dat 0x0
+:fd_drive_cap		dat 0x8
+:fd_boot_drive	dat 0x0
 
+.define fd_drive_number		4	;Max 4 drives are supported
 ;=============================================
 ;ROUTINES
 ;=============================================
@@ -41,6 +39,16 @@
 ;---------------------------------------------
 ;I/O
 ;---------------------------------------------
+
+:fd_change_drive	;A - drive number from 0 to [fd_drive_cap]
+set A, push
+mul A, 0x2
+add A, [fd_drive_table]
+set [fd_drive_cur], [A]
+add A, 0x1
+set [fd_FAT], [A]
+set A, pop
+set pc, pop
 
 :fd_write_sector
 set push, Z
@@ -69,12 +77,6 @@ set A, Z
  add Y, 0x200
  sub C, 1
  ifn C, 1
- hwi [fd_drive_cur]
- ifn B, 0x1
-	set pc, fd_load_sector_loop
- add Y, 0x200
- sub C, 0x1
- ifn C, 0x1
 	set pc, fd_load_sector_loop
 set Y, pop
 set X, pop

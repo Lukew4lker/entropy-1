@@ -31,28 +31,37 @@ ias im_interrupt_handler
 
 
 :fd_init			;initiate the file driver
-hwn j
-set i, 0x0
-set z, fd_drives
+set A, [fd_drive_number]
+mul A, 0x2
+set push, A
+set B, A
+jsr mm_request_memory
+set [fd_drive_table], A
+add peek, A
+hwn J
+set I, 0x0
+set Z, [fd_drive_table]
 :fd_init_loop
- hwq i
- ife a, 0x24c5
-  ife b, 0x4fd5
-   ife c, 0x000b
-    ife x, 0x7e91
-     ife y, 0x1eb3
+ hwq I
+ ife A, 0x24c5
+  ife B, 0x4fd5
+   ife C, 0x000b
+    ife X, 0x7e91
+     ife Y, 0x1eb3
 	  set pc, fd_init_add
- add i, 1
- ifn i, j
+ add I, 1
+ ifn I, j
 	set pc, fd_init_loop
 set pc, fd_init_next
 :fd_init_add
-set [z], i
-add z, 6
-add i, 1
-ifn z, fd_drives_end
+set [Z], I
+add Z, 2
+add I, 1
+ifn Z, peek
 set pc, fd_init_loop
 :fd_init_next
+set ex, pop
+set A, [fd_drive_table]
 set [fd_drive_cur], [fd_boot_drive]
 
 
@@ -81,7 +90,7 @@ IFL C, 15
 
 :init
 set a, 1
-jsr fd_load_prog
+jsr pm_add_proc
 set [multitasker_preemption_lock], 0
 
 
