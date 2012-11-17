@@ -8,9 +8,6 @@
 ; Set the A register to the location where the bytes should be written, call
 ; JSR lib_rng_wrapper, and it will take care of the rest.
 
-; This library will become functional once table locations for Entropy kernel
-; functions are decided.
-
 :lib_rng ; MD2 optimized for 2 word messages.
 
 :lib_rng_wrapper
@@ -64,7 +61,7 @@
 
 :lib_rng_generate ; A is location where random number should be written to.
     SET PUSH, A
-    JSR [0xHHHH] ; where HHHH is the code for cd_get_sys_time.
+    JSR [cd_get_sys_time]
     SET [lib_rng_seed_firstbyte], B
     SHR [lib_rng_seed_firstbyte], 8
     SET [lib_rng_seed_secondbyte], B
