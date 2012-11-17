@@ -5,12 +5,12 @@
 ; Version: 
 ; --------------------------------------------
 
-;@name multitasker_addProg
+;@name pm_add_proc
 ;adds a program to the program tables
 ;@params A the filepath of the program
 ;@returns A the program ID (needed to kill it), -1 if there wasn't room
 ;@see thePalindrome	
-:multitasker_addProg
+:pm_add_proc
     JSR fd_load_prog
     SET PUSH, B
 	SET PUSH, C
@@ -31,7 +31,6 @@
 	SET B, POP
 	SET PC, POP
 	
-	SET [multitasker_hasProg], 1
 	SET [B], A
 	
 	SET A, B
@@ -39,11 +38,15 @@
 	SET B, POP
 	SET PC, POP
 	
-;@name multitasker_killProg
+:pm_kill_me
+    SET A, [multitasker_curProg]
+	JSR pm_kill
+	
+;@name pm_kill
 ;removes a program from the program list
 ;@params A the program ID
 ;@see thePalindrome
-:multitasker_killProg ; TODO add special case if trying to kill current program
+:pm_kill ; TODO add special case if trying to kill current program
     MUL A, 0xB
     ADD A, multitasker_Progs_0
 	SET [A], 0

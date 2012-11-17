@@ -79,6 +79,8 @@ ADD B, 11
 ADD C, 1
 IFL C, 15
 	SET PC, pm_init_loop
+SET A, 1
+JSR pm_add_proc
 
 
 ;DO NOT ALLOCATE MEMORY FROM HERE UNTIL END OF THIS FILE
@@ -121,3 +123,9 @@ hwi i
 
 sub pc, 1	;Or else it randomly wanders in the first loaded function. When kernel is working, this should simply never be reached and can be removed.
 
+
+
+:init
+;load program /init.bin from disk
+jsr multitasker_addProg
+set [multitasker_preemption_lock], 0

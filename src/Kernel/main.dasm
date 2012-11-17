@@ -1,14 +1,10 @@
-; --------------------------------------------
-; Title:   main
-; Date of creation:    2012-10-05
-; Version: 0x1
-; --------------------------------------------
-;initialize hardware drivers
+;MAIN
 
 set pc, initiate_kernel		;see initiate.dasm
 
 ;INCLUDES
 
+#include "api_table.dasm"
 #include "defines.dasm"
 #include "mem_manager.dasm"
 #include "multitasker.dasm"
@@ -17,7 +13,6 @@ set pc, initiate_kernel		;see initiate.dasm
 #include "filesystem.dasm"
 #include "clock_driver.dasm"
 #include "sig_manager.dasm"
-;#include "lib_STDIO.dasm
 :free_space_start
 .dat 0xffff - end_of_kernel, 0xffff		;needed for memory manager.
 #include "initiate.dasm"	;move all initiators here
