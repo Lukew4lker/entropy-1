@@ -53,6 +53,7 @@ add i, 1
 ifn z, fd_drives_end
 set pc, fd_init_loop
 :fd_init_next
+set [fd_drive_cur], [fd_boot_drive]
 
 
 
@@ -77,6 +78,11 @@ ADD B, 11
 ADD C, 1
 IFL C, 15
 	SET PC, pm_init_loop
+
+:init
+set a, 1
+jsr fd_load_prog
+set [multitasker_preemption_lock], 0
 
 
 ;DO NOT ALLOCATE MEMORY FROM HERE UNTIL END OF THIS FILE
@@ -121,7 +127,7 @@ sub pc, 1	;Or else it randomly wanders in the first loaded function. When kernel
 
 
 
-:init
+;:init
 ;load program /init.bin from disk
-jsr multitasker_addProg
-set [multitasker_preemption_lock], 0
+;jsr multitasker_addProg
+;set [multitasker_preemption_lock], 0
