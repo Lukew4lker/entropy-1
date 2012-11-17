@@ -10,7 +10,7 @@
 ;@params A the filepath of the program
 ;@returns A the program ID (needed to kill it), -1 if there wasn't room
 ;@see thePalindrome	
-:multitasker_addProg ; TODO, load the program into memory
+:multitasker_addProg
     JSR fd_load_prog
     SET PUSH, B
 	SET PUSH, C
@@ -31,7 +31,7 @@
 	SET B, POP
 	SET PC, POP
 	
-	
+	SET [multitasker_hasProg], 1
 	SET [B], A
 	
 	SET A, B
@@ -75,6 +75,8 @@
 ;handles the main interrupt NOTE: From top, stack is: PC (stay), PC (stay), A (replace), PC (replace)
 ;@see thePalindrome
 :multitasker_Interrupt
+    IFE [multitasker_hasProg], 0
+	    SET PC, POP
     SET PUSH, A
 	SET A, multitasker_Progs_0
 	SET PUSH, B
@@ -154,6 +156,7 @@
     SET PC, POP
 	
 :multitasker_curProg dat 0
+:multitasker_hasProg dat 0
 
 ;Definition of datastructure
 ;Current PC

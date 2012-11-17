@@ -7,7 +7,7 @@ organic.exe ../src/bootloader/main.dasm ../bin/bootloader.bin --working-director
 echo -------------------
 echo Building Kernel
 echo -------------------
-organic.exe ../src/kernel/main.dasm ../bin/entropy.bin --working-directory ../src/kernel/ --listing debug/entropy.lst
+organic.exe ../src/kernel/main.dasm ../bin/entropy.bin --working-directory ../src/kernel/
 echo -------------------
 pause
 @echo on
