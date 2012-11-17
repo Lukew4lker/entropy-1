@@ -75,12 +75,6 @@ set A, Z
  add Y, 0x200
  sub C, 1
  ifn C, 1
- hwi [fd_drive_cur]
- ifn B, 0x1
-	set pc, fd_load_sector_loop
- add Y, 0x200
- sub C, 0x1
- ifn C, 0x1
 	set pc, fd_load_sector_loop
 set Y, pop
 set X, pop
