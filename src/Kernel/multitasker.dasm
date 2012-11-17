@@ -75,7 +75,7 @@
 ;handles the main interrupt NOTE: From top, stack is: PC (stay), PC (stay), A (replace), PC (replace)
 ;@see thePalindrome
 :multitasker_Interrupt
-    IFE [multitasker_hasProg], 0
+    IFN [multitasker_preemption_lock], 0
 	    SET PC, POP
     SET PUSH, A
 	SET A, multitasker_Progs_0
@@ -156,7 +156,7 @@
     SET PC, POP
 	
 :multitasker_curProg dat 0
-:multitasker_hasProg dat 0
+:multitasker_preemption_lock dat 1
 
 ;Definition of datastructure
 ;Current PC

@@ -40,9 +40,9 @@ set z, fd_drives
 set pc, fd_init_next
 :fd_init_add
 set [z], i
-ifl z, fd_drives_end
-	add z, 6
+add z, 6
 add i, 1
+ifn z, fd_drives_end
 set pc, fd_init_loop
 :fd_init_next
 
