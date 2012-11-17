@@ -3,7 +3,7 @@ mkdir ../bin/
 echo -------------------
 echo Building Bootloader
 echo -------------------
-mono Organic.exe ../src/Bootloader/main.dasm ../bin/bootloader.bin --working-directory ../src/Bootloader/ --listing debug/bootloader.lst
+mono Organic.exe ../src/Bootloader/main.dasm ../bin/bootloader.bin --working-directory ../src/Bootloader/
 echo -------------------
 echo Building Kernel
 echo -------------------

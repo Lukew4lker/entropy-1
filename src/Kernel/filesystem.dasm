@@ -243,8 +243,8 @@ set pc, pop
 
 
 
-
-
+:fd_load_prog ; Load program A into memory. Will allocate 16 extra words of space.
+;The same as fd_load_file for now.
 
 :fd_load_file	;args: A - starting cluster of the file to load. output: A - address of loaded file
 set push, B
@@ -322,7 +322,6 @@ set pc, pop
 :fd_find_sector ; Find sector B in file A.
 :fd_apply ; Apply changes to file A. Do this before loading another sector in the file.
 :fd_discard ; Discard changes to file A. Will reload the current sector from disk.
-:fd_load_prog ; Load program A into memory. Will allocate 16 extra words of space.
 :fd_create ; Create file, dir or link A with flags B.
 :fd_delete ; Delete file, dir or link A.
 :fd_move ; Move file, dir or link A.

@@ -40,9 +40,9 @@ set z, fd_drives
 set pc, fd_init_next
 :fd_init_add
 set [z], i
-ifl z, fd_drives_end
-	add z, 6
+add z, 6
 add i, 1
+ifn z, fd_drives_end
 set pc, fd_init_loop
 :fd_init_next
 
@@ -54,12 +54,27 @@ set pc, fd_init_loop
 ;set b, [fd_FAT]
 
 
+:pm_init
+SET B, multitasker_Progs_0
+ADD B, 10
+SET C, 0
+:pm_init_loop ;allocate stack for the processes
+SET A, 20
+JSR mm_request_memory
+ADD A, 19
+SET [B], A
+ADD B, 1
+SET [B], A
+ADD B, 11
+ADD C, 1
+IFL C, 15
+	SET PC, pm_init_loop
+
 
 ;DO NOT ALLOCATE MEMORY FROM HERE UNTIL END OF THIS FILE
 :mm_init_b			;deallocate initiators
 set [0x0000], 0xffff - free_space_start
 set [0x0001], -1
-
 
 
 :cd_init			;initiate the clock, clock interrupts start after this
@@ -78,10 +93,14 @@ set pc, .found_clock
 std pc, .loop_a
 :.no_clock
 set [cd_clock_id], -1
-set pc, pop
+sub pc, 1
 :.found_clock
 set [cd_clock_id], i
-set b, clock_interrupt_num
+set a, i
+set b, cd_interrupt_handler
+jsr im_request_handler
+set b, i
+add b, im_hardware_flag
 set a, 2
 hwi i
 set a, 0
