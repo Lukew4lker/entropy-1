@@ -21,7 +21,9 @@
 :fd_dir_entry_end
 :fd_drive_table	dat 0x0
 :fd_drive_cap		dat 0x8
+:fd_boot_drive	dat 0x0
 
+.define fd_drive_number		4	;Max 4 drives are supported
 ;=============================================
 ;ROUTINES
 ;=============================================

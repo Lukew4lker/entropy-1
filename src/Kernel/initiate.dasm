@@ -8,6 +8,14 @@
 
 
 
+:api_init			;put the api table into place
+set a, api_table_length
+set i, api_table
+set j, 2
+jsr ut_copy_mem
+
+
+
 :mm_init_a			;allocate all memory, including inits
 set [0x0000], 0
 set [0x0001], free_space_start
@@ -23,7 +31,7 @@ ias im_interrupt_handler
 
 
 :fd_init			;initiate the file driver
-set A, [fd_drive_number]
+set A, fd_drive_number
 mul A, 0x2
 set push, A
 set B, A
@@ -54,7 +62,7 @@ set pc, fd_init_loop
 :fd_init_next
 set ex, pop
 set A, [fd_drive_table]
-set [fd_drive_cur], [A]
+set [fd_drive_cur], [fd_boot_drive]
 
 
 
@@ -81,6 +89,11 @@ IFL C, 15
 	SET PC, pm_init_loop
 SET A, 1
 JSR pm_add_proc
+
+:init
+set a, 1
+jsr pm_add_proc
+set [multitasker_preemption_lock], 0
 
 
 ;DO NOT ALLOCATE MEMORY FROM HERE UNTIL END OF THIS FILE
@@ -125,7 +138,7 @@ sub pc, 1	;Or else it randomly wanders in the first loaded function. When kernel
 
 
 
-:init
+;:init
 ;load program /init.bin from disk
-jsr multitasker_addProg
-set [multitasker_preemption_lock], 0
+;jsr multitasker_addProg
+;set [multitasker_preemption_lock], 0
