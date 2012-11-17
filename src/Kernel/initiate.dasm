@@ -93,10 +93,14 @@ set pc, .found_clock
 std pc, .loop_a
 :.no_clock
 set [cd_clock_id], -1
-set pc, pop
+sub pc, 1
 :.found_clock
 set [cd_clock_id], i
-set b, clock_interrupt_num
+set a, i
+set b, cd_interrupt_handler
+jsr im_request_handler
+set b, i
+add b, im_hardware_flag
 set a, 2
 hwi i
 set a, 0

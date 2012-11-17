@@ -2,9 +2,12 @@
 
 ;Implements dynamic interrupt handling for kernel and processes, also implements communication through signals.
 
+.define im_hardware_flag		0x1000	;Never set this to 0
+
 :im_interrupt_handler
 set push, ex
 set push, b
+sub a, im_hardware_flag
 hwn b
 sub b, 1
 ifg a, b
