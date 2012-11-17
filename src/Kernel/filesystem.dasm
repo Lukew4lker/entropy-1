@@ -237,13 +237,12 @@ set pc, pop
 
 
 :fd_load_file_pop_return_error	;in case of not enough memory to load a file
-set ex, pop
-set ex, pop
-set ex, pop
-set ex, pop
-set ex, pop
-set ex, pop
-set ex, 0x0
+set Y, pop
+set X, pop
+set I, pop
+set C, pop
+set B, pop
+set A, 0x0
 set pc, pop
 
 
