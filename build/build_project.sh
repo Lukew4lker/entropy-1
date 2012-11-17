@@ -7,5 +7,5 @@ mono Organic.exe ../src/Bootloader/main.dasm ../bin/bootloader.bin --working-dir
 echo -------------------
 echo Building Kernel
 echo -------------------
-mono Organic.exe ../src/Kernel/main.dasm ../bin/entropy.bin --working-directory ../src/Kernel/ --listing debug/entropy.lst
+mono Organic.exe ../src/Kernel/main.dasm ../bin/entropy.img --working-directory ../src/Kernel/ --little-endian
 echo -------------------

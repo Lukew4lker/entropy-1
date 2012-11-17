@@ -2,6 +2,10 @@
 
 ;ONLY PUBLIC FUNCTIONS IN HERE
 
+;WHEN TABLE LENGTH CHANGES, UPDATE THIS TO MATCH:
+
+.define api_table_length		api_table - api_table_end	;0x0017
+
 :api_table
 ;dat function					;Offset
 .dat mm_request_memory			;0x00
@@ -34,3 +38,4 @@
 .dat fd_load_file				;0x15
 .dat fd_edit_file				;0x16
 
+:api_table_end

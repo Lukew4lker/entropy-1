@@ -8,6 +8,14 @@
 
 
 
+:api_init			;put the api table into place
+set a, api_table_length
+set i, api_table
+set j, 2
+jsr ut_copy_mem
+
+
+
 :mm_init_a			;allocate all memory, including inits
 set [0x0000], 0
 set [0x0001], free_space_start
