@@ -16,10 +16,10 @@ set [fd_boot_drive], [0xffff]
 set pc, initiate_kernel
 
 ;main_end
-.define main_end				22		;UPDATE TO MATCH
+.define main_end				21		;UPDATE TO MATCH
 .define reserved_sector_num		8
 
-.reserve 0x0017 - 21			;api_table_length - main_end
+.reserve 0x0018 - 21 + 2			;api_table_length - main_end + 2
 
 ;INCLUDES
 

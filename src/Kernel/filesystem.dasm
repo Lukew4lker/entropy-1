@@ -23,7 +23,7 @@
 :fd_drive_cap		dat 0x8
 :fd_boot_drive	dat 0x0
 
-.define fd_drive_number		4	;Max 4 drives are supported
+:fd_drive_number	dat 0x4		;Max 4 drives are supported
 ;=============================================
 ;ROUTINES
 ;=============================================
@@ -53,13 +53,11 @@ set pc, pop
 :fd_write_sector
 set push, Z
 set Z, 3
-set Z, 0x3
 set pc, fd_load_sector_start
 
 :fd_load_sector		;A - starting sector, B - number of sectors, C - location in memory
 set push, Z
 set Z, 2
-set Z, 0x2
 :fd_load_sector_start
 set push, A
 set push, B
@@ -70,13 +68,14 @@ set X, A
 set Y, C
 set C, B
 set A, Z
+add C, 1
 :fd_load_sector_loop
  hwi [fd_drive_cur]
  ifn B, 0x1
 	set pc, fd_load_sector_loop
  add Y, 0x200
  sub C, 1
- ifn C, 1
+ ifg C, 1
 	set pc, fd_load_sector_loop
 set Y, pop
 set X, pop
@@ -239,6 +238,7 @@ set pc, pop
 
 
 :fd_load_file_pop_return_error	;in case of not enough memory to load a file
+set A, pop
 set Y, pop
 set X, pop
 set I, pop

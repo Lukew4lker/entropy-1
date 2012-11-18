@@ -23,21 +23,20 @@ set c, pop
 set b, pop
 set pc, pop
 :.found_space ;b=start of section header
-set c, a
-set a, [b]
-sub a, c
-sub a, 1
-set c, [b+1]
-sub [b+1], [b]
+set c, [b]
+sub c, a
+sub c, 1
+set a, [b+1]
+sub a, [b]
 set [b], 0
-set b, [b+1]
-set [b], a
-set [b+1], c
-set a, b
+set [a+1], [b+1]
+set [b+1], a
+set [a], c
 add a, 2
 set c, pop
 set b, pop
 set pc, pop
+
 
 :mm_free_memory
 set push, b
