@@ -8,7 +8,7 @@
 ;Entry point, contains the vectors of all functions here
 ;---------------------------------------------
 :lem1802
-	dat 0x000a								; number of functions here -> automatic readapting of pointers possible
+	dat 0x0011								; number of functions here -> automatic readapting of pointers possible
 	dat .get_hardware_class					;+0x1
 	dat .init								;+0x2
 	dat .set_border_color					;+0x3
@@ -19,6 +19,13 @@
 	dat	.set_cursor_pos						;+0x8
 	dat	.get_cursor_pos						;+0x9
 	dat	.set_cursor_blink					;+0xa
+	dat	.set_font_space						;+0xb
+	dat	.set_palette_space					;+0xc
+	dat	.mem_dump_font						;+0xd
+	dat	.mem_dump_palette					;+0xe
+	dat	.get_num_lines						;+0xf
+	dat	.get_num_chars_per_line				;+0x10
+	dat	.get_num_colors						;+0x11
 	
 	
 :.draw_memory
@@ -48,7 +55,7 @@
 ;---------------------------------------------	
 ; Title:	lem1802_init
 ;
-; initialized the lem1802.
+; initializes the lem1802.
 ; it uses the internal fonr and color map.
 ;
 ; Params:	a - the IRQ of the lem1802
@@ -162,7 +169,7 @@
 ;---------------------------------------------	
 ; Title:	lem1802_clr_scr
 ;
-; will fill the entire display memory with 0xfb20		//note: f/b are meaning the foreground/backgrund color
+; will fill the entire display memory with 0xfb20		//note: f/b are meaning the foreground/background color
 ;
 ; Params:	none
 ; returns:  none
@@ -225,7 +232,7 @@
 ;---------------------------------------------	
 ; Title:	lem1802_get_cursor_pos
 ;
-; gets the position of the cursor (allthough the calling routine should keep track of that)
+; gets the position of the cursor (although the calling routine should keep track of that)
 ;
 ; Params:	none
 ; returns:  a - cursor position
@@ -260,4 +267,132 @@
 	and	[b+.cursor_pos],	0xFF7F
 	bor	[b+.cursor_pos],	a
 	set	b,		pop
+	set	pc,		pop
+	
+;---------------------------------------------
+; Title:	lem1802_set_font space
+;
+; sets the font space for the lem to the desired location
+; As always, the caller is responsible to provide enough space for this
+;
+; Params:	a - ptr to the font space
+; Destroys: all params
+; returns:  none
+;---------------------------------------------
+:.set_font_space
+	set	push,	b
+	set	push,	c
+	set	b,		a
+	set	c,		pc
+	:.base11
+	sub	c,		.base11
+	set	a,		1
+	HWI	[c+.IRQ]
+	set	c,		pop
+	set	b,		pop
+	set	pc,		pop
+	
+;---------------------------------------------
+; Title:	lem1802_set_palette_space
+;
+; sets the fpalette space for the lem to the desired location
+; As always, the caller is responsible to provide enough space for this
+;
+; Params:	a - ptr to the palette space
+; Destroys: all params
+; returns:  none
+;---------------------------------------------
+:.set_palette_space
+	set	push,	b
+	set	push,	c
+	set	b,		a
+	set	c,		pc
+	:.base12
+	sub	c,		.base12
+	set	a,		2
+	HWI	[c+.IRQ]
+	set	c,		pop
+	set	b,		pop
+	set	pc,		pop
+	
+;---------------------------------------------
+; Title:	lem1802_mem_dunp_font
+;
+; orders the lem to create an memdunp of the font pace to the desired location
+; As always, the caller is responsible to provide enough space for this
+;
+; Params:	a - ptr to the font space
+; Destroys: all params
+; returns:  none
+;---------------------------------------------
+:.mem_dump_font
+	set	push,	b
+	set	push,	c
+	set	b,		a
+	set	c,		pc
+	:.base13
+	sub	c,		.base13
+	set	a,		4
+	HWI	[c+.IRQ]
+	set	c,		pop
+	set	b,		pop
+	set	pc,		pop
+
+;---------------------------------------------
+; Title:	lem1802_mem_dunp_palette
+;
+; orders the lem to create an memdunp of the font pace to the desired location
+; As always, the caller is responsible to provide enough space for this
+;
+; Params:	a - ptr to the palette space
+; Destroys: all params
+; returns:  none
+;---------------------------------------------
+:.mem_dump_palette
+	set	push,	b
+	set	push,	c
+	set	b,		a
+	set	c,		pc
+	:.base14
+	sub	c,		.base14
+	set	a,		5
+	HWI	[c+.IRQ]
+	set	c,		pop
+	set	b,		pop
+	set	pc,		pop
+	
+;---------------------------------------------
+; Title:	lem1802_get_num_lines
+;
+; gets the number of printable lines for the Lem1802
+;
+; Params:	none
+; returns:  a - number of lines
+;---------------------------------------------
+:.get_num_lines
+	set	a,		12
+	set	pc,		pop
+	
+;---------------------------------------------
+; Title:	lem1802_get_num_chars_per_line
+;
+; get the number of characters per line for the lem1802
+;
+; Params:	none
+; returns:  a - characters per line
+;---------------------------------------------
+:.get_num_chars_per_line
+	set	a,		32
+	set	pc,		pop
+
+;---------------------------------------------
+; Title:	lem1802_get_num_colors
+;
+; gets the amount of applicable colors
+;
+; Params:	none
+; returns:  a - number od colors
+;---------------------------------------------
+:.get_num_colors
+	set	a,		16
 	set	pc,		pop
