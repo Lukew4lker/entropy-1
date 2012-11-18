@@ -55,12 +55,11 @@
 ;---------------------------------------------
 ; Title:	SPED_3_init
 ;
-; will initiate the Driver and Meory to be ready for drawing
+; will initiate the Driver and Memory to be ready for drawing
 ; 
 ; Params:	A - HWN of the SPED-3
-; returns:  A:	0 - sucessful
+; returns:  A:	0 - successful
 ;				0xFFFF - failure
-; Side effects: The sped-3 is now capable of working
 ;---------------------------------------------
 :.init
 	set	push,	b				; b is temp for relative data acess
@@ -188,7 +187,6 @@
 ; Params:	A - rotation in °deg
 ; returns:  A:	0 - sucessful
 ;				0xFFFF - failure
-; Side effects: SPED-3 will draw all Vertexes queued in the corresponding memory according to num_vertexes
 ;---------------------------------------------
 :.rotate	
 	set	push,	b
