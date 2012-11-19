@@ -77,6 +77,13 @@ add C, 1
  sub C, 1
  ifg C, 1
 	set pc, fd_load_sector_loop
+;Temporary wait till finish
+:fd_load_sector_loop_b
+set a, 0
+hwi [fd_drive_cur]
+ife b, 3
+set pc, fd_load_sector_loop_b
+;end
 set Y, pop
 set X, pop
 set C, pop
