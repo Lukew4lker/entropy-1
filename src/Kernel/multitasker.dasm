@@ -11,6 +11,8 @@
 ;@returns A the program ID (needed to kill it), -1 if there wasn't room
 ;@see thePalindrome	
 :pm_add_proc
+    IFE A, 0xFFFF
+	    SUB PC, 1 ;OH NOES!!!!!!!!
     JSR fd_load_prog
     SET PUSH, B
 	SET PUSH, C
