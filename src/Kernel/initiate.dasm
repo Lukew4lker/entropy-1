@@ -84,7 +84,6 @@ IFL C, 15
 	SET PC, pm_init_loop
 SET A, 1
 JSR pm_add_proc
-set [multitasker_preemption_lock], 0
 
 
 :api_init			;put the api table into place
@@ -130,7 +129,7 @@ set a, 0
 set b, tick_length
 hwi i
 
-
+set [multitasker_preemption_lock], 0
 
 sub pc, 1	;Or else it randomly wanders in the first loaded function. When kernel is working, this should simply never be reached and can be removed.
 
