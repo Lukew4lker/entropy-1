@@ -37,4 +37,4 @@ set pc, initiate_kernel
 #include "api_table.dasm"
 :end_of_kernel
 
-#include "disk_data.dasm"
+;#include "disk_data.dasm"

@@ -1,9 +1,9 @@
-.align reserved_sector_num*512
+;.align reserved_sector_num*512
 
 ;FAT SECTORS
 
 .dat 0xffff, 0xffff
-.reserve 1438
+.reserve 1534
 
 ;ROOT SECTOR
 
