@@ -60,6 +60,8 @@ set push, Z
 set Z, 2
 :fd_load_sector_start
 set push, A
+set push, B
+set push, C
 set push, X
 set push, Y
 set X, A
@@ -73,6 +75,8 @@ ife B, 3
 set pc, fd_load_sector_loop_b
 set Y, pop
 set X, pop
+set C, pop
+set B, pop
 set A, pop
 set Z, pop
 set pc, pop
