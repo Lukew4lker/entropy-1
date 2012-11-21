@@ -57,7 +57,7 @@ set A, [fd_drive_table]
 set [fd_drive_cur], [fd_boot_drive]
 ;get FAT offset
 set [fd_FAT_offset], [0x08] ;number of reserved sectors
-
+jsr fd_load_FAT
 
 
 

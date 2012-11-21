@@ -85,7 +85,6 @@ set pc, pop
 ifn [fd_FAT], 0x0
 	set pc, pop
 set push, A
-set push, B
 set push, C
 set A, [fd_FAT_number]
 shl A, 9
@@ -93,10 +92,13 @@ jsr mm_request_memory
 set C, A
 set [fd_FAT], C
 set A, [fd_FAT_offset]
-set B, [fd_FAT_number]
+:.loop
 jsr fd_load_sector
+add C, 0x200
+add A, 0x1
+ifl A, [fd_root_offset]
+	set pc, .loop
 set C, pop
-set B, pop
 set A, pop
 set pc, pop
 
@@ -104,14 +106,16 @@ set pc, pop
 ife [fd_FAT], 0x0
 	set pc, pop
 set push, A
-set push, B
 set push, C
 set A, [fd_FAT_offset]
-set B, [fd_FAT_number]
 set C, [fd_FAT]
+:.loop
 jsr fd_write_sector
+add C, 0x200
+add A, 0x1
+ifl A, [fd_root_offset]
+	set pc, .loop
 set C, pop
-set B, pop
 set A, pop
 set pc, pop
 
