@@ -132,6 +132,7 @@ set b, tick_length
 hwi i
 
 set [multitasker_preemption_lock], 0
+set pc, [multitasker_Progs_0]				;note, problems may occur if interrupt happens right before this
 
 sub pc, 1	;Or else it randomly wanders in the first loaded function. When kernel is working, this should simply never be reached and can be removed.
 
