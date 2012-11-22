@@ -18,7 +18,7 @@
 	SET PUSH, C
 	SET C, 0
 	SET B, multitasker_Progs_0
-	SUB B, 0xB
+	SUB B, 0xC
 	
 	ADD C, 1
 	ADD B, 0xC
@@ -26,7 +26,7 @@
 	    IFL 0xF, C
 	        SUB PC, 5 ; B now points to an empty program slot
 	
-    IFL 0xF, C
+    IFL C, 0x11
 		ADD PC, 4
 	SET A, -1
 	SET C, POP
@@ -91,9 +91,11 @@
 	SET B, POP ;at this point, A points to multitasker_Progs_(number of cur prog)
 	ADD A, 1
 	SUB [A], 1
-	IFN [A], 0
-	    SET PC, multitasker_Interrupt_End
-		
+	IFE [A], 0
+	    SET PC, .continue
+	SET A, POP
+	SET PC, POP
+	:.continue
 	ADD A, 1
 	SET [A], POP
 	ADD A, 1

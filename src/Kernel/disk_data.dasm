@@ -1,9 +1,9 @@
-.align reserved_sector_num*512
+;.align reserved_sector_num*512
 
 ;FAT SECTORS
 
 .dat 0xffff, 0xffff
-.reserve 1438
+.reserve 1534
 
 ;ROOT SECTOR
 
@@ -27,13 +27,13 @@
 .dat 0x0000, 0x0000		;0x6		2	Create datetime
 .dat 0x0000, 0x0000		;0x8		2	Last access datetime
 .dat 0x0000, 0x0000		;0xA		2	Last modify datetime
-.dat 0x0000, 0x0001		;0xC		2	Size in words
+.dat 0x0000, 0x0003		;0xC		2	Size in words
 .dat 0x0001				;0xE		1	First cluster
 .dat 0x0000				;0xF 		1	Reserved for future expansion
 
 .reserve 480
 
 ;USABLE SECTOR 1: init.bin #1
-sub pc, 1
+
 
 
