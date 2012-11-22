@@ -1,0 +1,20 @@
+.macro jump(label)
+:here add pc, (label - here) - 2
+.endmacro
+
+.macro getdata(register, label)
+:here set register, pc
+set register, [register + ((label - here) - 1)]
+.endmacro
+
+.macro setdata(label, register)
+:here set register, pc
+set [register + ((label - here) - 1)], register
+.endmacro
+
+:test
+set j, 0xbabe
+:.loop
+add a, 1
+jump(.loop)
+
