@@ -9,10 +9,10 @@
 ;VARIABLES
 ;=============================================
 :fd_drive_cur 	dat 0x0
-:fd_dir	  		dat 0x0
-:fd_FAT_offset	dat 0xC8
-:fd_FAT_number	dat 0x3
-:fd_root_offset	dat 0xCB
+:fd_working_dir	dat 0x0		;later the fd is going to read these from the end of FAT -
+:fd_FAT_offset	dat 0xC8	;-														 -
+:fd_FAT_number	dat 0x3		;-														 -
+:fd_root_offset	dat 0xCB	;---------------------------------------------------------
 :fd_FAT			dat 0x0
 :fd_dir_entry		dat 0x0, 0x0, 0x0, 0x0 
 					dat	0x0, 0x0, 0x0, 0x0
@@ -22,23 +22,22 @@
 :fd_drive_table	dat 0x0
 :fd_drive_cap		dat 0x8
 :fd_boot_drive	dat 0x0
-
-:fd_drive_number	dat 0x4		;Max 4 drives are supported
+:fd_file_table	dat 0x0		;File table - table containing data on all open files. format is as follows:
+;words 1-16 - file DTE.
+;17. word - process which has the file opened, 0xFFFF if opened read-only; 
+;18. word - file address; 
+;19. word - currently opened sector of file
 ;=============================================
 ;ROUTINES
 ;=============================================
 
 ;---------------------------------------------
-;errors
-;---------------------------------------------
-
-:fd_oom 	dat 0x0, 0x2345	;out of memory
-:fd_nes	dat 0x0, 0x3456
-
-
-;---------------------------------------------
 ;I/O
 ;---------------------------------------------
+
+:fd_load_drive	;loads drive FAT table into memory
+
+:fd_unload_drive	;unloads drive FAT
 
 :fd_change_drive	;A - drive number from 0 to [fd_drive_cap]
 set A, push
@@ -196,16 +195,23 @@ set push, B
 set push, C
 set push, I
 set push, J
-set B, 0x0
+jsr fd_get_free_sector
+add A, [fd_FAT]
+set [A], 0xFFFF
+sub A, [fd_FAT]
+set B, A
 set C, 0x0
 set I, 0x0
 set J, A
+sub J, 0x1
+ife J, 0x0
+ set pc, fd_create_file_end
 	:fd_create_file_loop
 	jsr fd_get_free_sector
 	ife C, 0x0
 		set C, A
 	ife A, 0xFFFF
-		jsr fd_nes
+		dat 0x0	;not enough space. how about an error handler?
 	add A, [fd_FAT]
 	set [A], B
 	sub A, [fd_FAT]
@@ -216,6 +222,7 @@ set J, A
 add A, [fd_FAT]
 set [A], 0xFFFF
 set A, C
+:fd_create_file_end
 jsr fd_update_FAT
 set J, pop
 set I, pop
@@ -224,6 +231,30 @@ set B, pop
 set pc, pop	
 	
 :fd_delete_file	;A - starting cluster
+
+:fd_write_file_sector ;A - file starting cluster, B - sector number in file A, C - location in memory to read from
+jsr fd_get_file_sector
+jsr fd_write_sector
+set pc, pop
+
+:fd_load_file_sector	;A - file starting cluster, B - sector number in file A, C - location in memory to read to
+jsr fd_get_file_sector
+jsr fd_load_sector
+set pc, pop
+
+:fd_get_file_sector
+set push, I
+set push, C
+set I, 0x0
+:.loop
+set C, A
+jsr fd_get_FAT_entry
+add I, 0x1
+ifn I, B
+	set pc, .loop
+set C, pop
+set I, pop
+set pc, pop
 
 :fd_get_file_length	;args: A - starting cluster, output A - length
 set push, I
@@ -305,8 +336,6 @@ set push, B
 set push, C
 set push, I
 set push, X
-set push, A
-set A, pop
 set I, 0x0
 
 :.loop
@@ -330,9 +359,27 @@ set B, pop
 set A, pop
 set pc, pop
 
+:fd_get_free_file_table_entry	;0xFFFF if none
+set push, I
+set A, [fd_file_table]
+set I, 0x0
+:.loop
+ife [A], 0x0
+	set pc, .end
+add A, 0x13
+add I, 0x1
+ifn I, 0x10
+	set pc, .loop
+set A, 0xFFFF
+set I, pop
+set pc, pop
+:.end
+set I, pop
+set pc, pop
+
 :fd_open_file ; Open file A for reading and writing.
 :fd_close_file ; Close file A.
-:fd_find_sector ; Find sector B in file A.
+:fd_find_sector ; Find sector B in file A.	;Find and load, I assume?
 :fd_apply ; Apply changes to file A. Do this before loading another sector in the file.
 :fd_discard ; Discard changes to file A. Will reload the current sector from disk.
 :fd_create ; Create file, dir or link A with flags B.
@@ -341,7 +388,9 @@ set pc, pop
 :fd_change_dir ; Change the working directory to A, one level at a time.
 :fd_list ; List the files in the working directory.
 :fd_get_wd ; Get the working directory.
+set A, [fd_working_dir]
+set pc, pop
 :fd_get_flags ; Get the flags for file A.
 :fd_set_flags ; Set the flags for file A to B. Some flag changes will be reverted before applying.
-:fd_get_props ; Get the properties (size, number of children, flags, create, edit and view times).
+:fd_get_props ; Get the properties (size, number of children, flags, create, edit and view times).	;How should I get the number of children??
 :fd_format ; Format disk A with the filesystem.

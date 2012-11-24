@@ -60,7 +60,9 @@ set [fd_FAT_offset], [0x08] ;number of reserved sectors
 set [fd_root_offset], [0x08]
 add [fd_root_offset], [fd_FAT_number]
 jsr fd_load_FAT
-
+set A, 0x130
+jsr mm_request_memory
+set [fd_file_table], A
 
 
 ;:fd_init_test			;It crashes. What is it supposed to do? --Not crash, I guess. Afaik, it may be a hardware fault.
