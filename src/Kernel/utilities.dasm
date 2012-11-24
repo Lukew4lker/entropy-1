@@ -64,22 +64,22 @@ ifg i, a
 set pc, .next
 add a, 1
 :.loop_a
-sti [i], [j]
-sti [i], [j]
-sti [i], [j]
-sti [i], [j]
-sti [i], [j] ;
-sti [i], [j] ;
-sti [i], [j] ;
-sti [i], [j] ;
-sti [i], [j]
-sti [i], [j]
-sti [i], [j]
-sti [i], [j]
-sti [i], [j] ;
-sti [i], [j] ;
-sti [i], [j] ;
-sti [i], [j] ;
+sti [j], [i]
+sti [j], [i]
+sti [j], [i]
+sti [j], [i]
+sti [j], [i] ;
+sti [j], [i] ;
+sti [j], [i] ;
+sti [j], [i] ;
+sti [j], [i]
+sti [j], [i]
+sti [j], [i]
+sti [j], [i]
+sti [j], [i] ;
+sti [j], [i] ;
+sti [j], [i] ;
+sti [j], [i] ;
 ifg a, i
 set pc, .loop_a
 :.next
