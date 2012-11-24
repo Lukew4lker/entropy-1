@@ -1,3 +1,4 @@
+#! /usr/bin/env python3.3
 with open("../bin/entropy.img", "ab") as f:
 	size = f.tell()
 	if size < 2 * 8 * 512:
