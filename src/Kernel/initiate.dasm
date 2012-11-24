@@ -99,8 +99,8 @@ jsr ut_copy_mem
 
 ;DO NOT ALLOCATE MEMORY FROM HERE UNTIL END OF THIS FILE
 :mm_init_b			;deallocate initiators
-set [0x0000], 0xffff - free_space_start
-set [0x0001], -1
+set a, free_space_start
+jsr mm_free_memory
 
 
 :cd_init			;initiate the clock, clock interrupts start after this
