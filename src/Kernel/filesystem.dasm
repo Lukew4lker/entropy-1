@@ -378,7 +378,112 @@ set I, pop
 set pc, pop
 
 :fd_open_file ; Open file A for reading and writing.
+set push, X
+set X, A
+jsr fd_get_free_file_table_entry
+ifn A, 0xFFFF
+	set pc, .continue
+set X, pop
+set pc, pop
+:.continue
+set push, B
+set push, C
+set B, A
+set push, B
+sub peek, [fd_file_table]
+div peek, 0x13
+set A, X
+;add loading of the DTE
+add B, 0x10
+set [B], [current_process]
+add B, 0x1
+set A, 0x200
+jsr mm_request_memory
+set [B], A
+set A, pop
+set C, pop
+set B, pop
+set X, pop
+set pc, pop
+
+:fd_assign		;copies C words from A to B
+ife C, 0x0
+	set pc, pop
+set push, I
+set push, J
+set push, C
+set I, B
+set J, A
+:.loop
+sti [I], [J]
+sub C, 0x1
+ifn C, 0x0
+	set pc, .loop
+set C, pop
+set J, pop
+set I, pop
+set pc, pop
+
+:fd_clear		;sets C words starting from A to 0x0
+ife C, 0x0
+	set pc, pop
+set push, I
+set push, J
+set push, C
+set I, A
+:.loop
+sti [I], 0x0
+sub C, 0x1
+ifn C, 0x0
+	set pc, .loop
+set C, pop
+set J, pop
+set I, pop
+set pc, pop
+
+:fd_compare	;compare C words in A to C words in B; 0x0 if equal, 0xFFFF if not
+ife C, 0x0
+	set pc, pop
+set push, B
+set push, C
+:.loop
+ifn [A], [B]
+	set pc, .wrong
+add A, 0x1
+add B, 0x1
+sub C, 0x1
+ifn C, 0x0
+	set pc, .loop
+set A, 0x0
+set C, pop
+set B, pop
+set pc, pop
+:.wrong
+set A, 0xFFFF
+set C, pop
+set B, pop
+set pc, pop
+
 :fd_close_file ; Close file A.
+set push, A
+set push, B
+set push, C
+mul A, 0x13
+add A, [fd_file_table]
+add A, 0x11
+set B, A
+set A, [B]
+ifn A, 0x0
+	jsr mm_free_memory
+sub B, 0x11
+set A, B
+set C, 0x13
+jsr fd_clear
+set C, pop
+set B, pop
+set A, pop
+set pc, pop
+
 :fd_find_sector ; Find sector B in file A.	;Find and load, I assume?
 :fd_apply ; Apply changes to file A. Do this before loading another sector in the file.
 :fd_discard ; Discard changes to file A. Will reload the current sector from disk.

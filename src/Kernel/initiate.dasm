@@ -23,7 +23,7 @@ ias im_interrupt_handler
 
 
 :fd_init			;initiate the file driver
-set A, [fd_drive_number]
+set A, [fd_drive_cap]
 mul A, 0x2
 set push, A
 set B, A
