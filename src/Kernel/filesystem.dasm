@@ -560,7 +560,7 @@ set x, pop
 set c, pop
 set pc, pop
 
-:.EoD(file not found in directory)
+:.EoD;(file not found in directory)
 set ex, pop
 set ex, 0x404
 set a, pop
