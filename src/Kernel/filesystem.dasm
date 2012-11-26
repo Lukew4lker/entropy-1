@@ -479,7 +479,7 @@ set A, pop
 set pc, pop
 
 
-:fd _find_file_dte ; (not tested) 
+:fd_find_file_dte ; (not tested) 
 ; a- starting address of file name string (11 chars), 
 ;output a - offset of file dte in sector b. 
 ;B MUST BE EMTPY BEFORE CALLING, IF NOT YOU DESERVE TO LOSE IT.
