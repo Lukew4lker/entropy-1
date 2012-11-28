@@ -19,5 +19,5 @@ mono Organic.exe ../src/Kernel/init.bin.dasm ../bin/init.bin.tmp --little-endian
 echo -------------------
 echo Making disk
 echo -------------------
-..\bin\makedisk.py
+../bin/makedisk.py
 echo -------------------
