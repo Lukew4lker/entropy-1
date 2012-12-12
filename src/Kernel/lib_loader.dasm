@@ -29,6 +29,7 @@ SUB A, 1
 SET B, [A] ; B tells us how much of the relocation table is left
 SET PUSH, Y
 :.loop
+ADD [A], [I]
 SET Y, [A]
 ADD [Y], [I]
 SUB A, 1
