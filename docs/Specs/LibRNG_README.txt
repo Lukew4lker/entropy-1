@@ -9,4 +9,4 @@ the fact that the system clock has good enough time resolution for our
 purposes, the data generated will certainly be good enough for in game usage.
 
 Use is very simple. Set the A register to where you want the first out of 16
-words of data to be written, then call JSR lib_rng_wrapper.
+words of data to be written, then call lib_rng_wrapper.

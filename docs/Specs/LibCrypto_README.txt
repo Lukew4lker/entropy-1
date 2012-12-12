@@ -82,7 +82,7 @@ How to Use:
     parties should agree on the highest number above 20 that still allows for
     reasonable calculation time.
 
-6.  Call JSR lib_crypto_wrapper.
+6.  Call lib_crypto_wrapper from the library's Public API.
 
 7.  The data will now have been overwritten with its encrypted/unencrypted
     version. Nothing else outside the space taken up by the library should
@@ -93,7 +93,7 @@ How to Use:
 9.  If you're done with the library, go to step 10. Otherwise, go to step 2.
 
 10. Once you're completely finished with all cryptographic operations, call
-    JSR lib_crypto_cleanup. This prevents information about the state from
+    lib_crypto_cleanup. This prevents information about the state from
     leaking into the hands of adversaries. Also delete the key from RAM when it
     is no longer needed. However, keep it stored elsewhere to be used when it
     is required again.

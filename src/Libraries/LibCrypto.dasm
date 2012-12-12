@@ -21,7 +21,9 @@
     SET PUSH, X   ; instead of 1.
     SET PUSH, Y
     SET PUSH, Z
-    JSR lib_crypto_apply
+    .longform
+:lib_crypto_RELOC1 JSR lib_crypto_apply
+    .shortform
     SET Z, POP
     SET Y, POP
     SET X, POP
@@ -35,7 +37,9 @@
 :lib_crypto_cleanup
     SET PUSH, I
     SET PUSH, J
-    JSR lib_crypto_init
+    .longform
+:lib_crypto_RELOC2 JSR lib_crypto_init
+    .shortform
     SET A, 0
     SET B, 0
     SET C, 0
@@ -49,26 +53,34 @@
 ; Initializes the state array.
 
 :lib_crypto_init
-    SET I, lib_crypto_state
+    .longform
+:lib_crypto_RELOC3 SET I, lib_crypto_state
+    .shortform
     SET J, 0
     :lib_crypto_initloop
         STI [I], J
-        IFN I, lib_crypto_end
-            SET PC, lib_crypto_initloop
-    SET [lib_crypto_firstrun_flag], 1
-    SET PC, POP
+        .longform
+:lib_crypto_RELOC4 IFN I, lib_crypto_end
+:lib_crypto_RELOC5 SET PC, lib_crypto_initloop
+:lib_crypto_RELOC6 SET [lib_crypto_firstrun_flag], 1 ; [label] comes after 1
+        .shortform                                   ; when assembled in
+    SET PC, POP                                      ; longform.
 
 ; Sets up the state based on the key.
 ; A is the number of iterations and B is the location of the key in memory.
 
 :lib_crypto_shufflestate
-    SET [lib_crypto_firstrun_flag], 0
+    .longform
+:lib_crypto_RELOC7 SET [lib_crypto_firstrun_flag], 0 ; Same as above.
+    .shortform
     SET J, 0
     :lib_crypto_shuffleloop_outer
         SET I, 0 ; Inner loop counter.
         :lib_crypto_shuffleloop
             SET C, B ; Key pointer.
-            SET Y, lib_crypto_state ; State array pointer.
+            .longform
+:lib_crypto_RELOC8 SET Y, lib_crypto_state ; State array pointer.
+            .shortform
             SET Z, Y ; Set Y and Z (array pointer) to beginning of array.
             ADD Y, I ; Move Y to ith position.
             ADD J, [Y]
@@ -81,10 +93,14 @@
             SET [Z], X ; Swap complete.
             ADD I, 1
             IFN I, 256
-                SET PC, lib_crypto_shuffleloop
+            .longform
+:lib_crypto_RELOC9 SET PC, lib_crypto_shuffleloop
+            .shortform
             SUB A, 1
             IFN A, 0
-                SET PC, lib_crypto_shuffleloop_outer
+                .longform
+:lib_crypto_RELOC10 SET PC, lib_crypto_shuffleloop_outer
+                .shortform
             SET PC, POP
 
 ; Applies the algorithm with arguments passed from the wrapper subroutine.
@@ -94,8 +110,10 @@
     SET PUSH, B
     SET PUSH, C
     SET PUSH, I ; Store values on stack.
-    IFN [lib_crypto_firstrun_flag], 1
-        JSR lib_crypto_init
+    .longform
+:lib_crypto_RELOC11 IFN [lib_crypto_firstrun_flag], 1 ; Same as RELOC6.
+:lib_crypto_RELOC12     JSR lib_crypto_init
+    .shortform
     SET A, POP ; Set A to iterations.
     SET B, PICK 2 ; Set B to key location.
     JSR lib_crypto_shufflestate
@@ -107,7 +125,9 @@
     :lib_crypto_applyloop
         IFG B, C
             SET PC, POP ; Exits here.
-        SET Y, lib_crypto_state ; State array pointer.
+        .longform
+:lib_crypto_RELOC13 SET Y, lib_crypto_state ; State array pointer.
+        .shortform
         SET Z, Y ; Ditto.
         ADD I, 1
         AND I, 0xff ; Fewer cycles than MOD I, 256.
@@ -121,7 +141,9 @@
         AND X, 0xff ; Fewer cycles than MOD X, 256.
         XOR [B], X
         ADD B, 1
-        SET PC, lib_crypto_applyloop
+        .longform
+:lib_crypto_RELOC14 SET PC, lib_crypto_applyloop
+        .shortform
 
 :lib_crypto_firstrun_flag
 DAT 0x01
@@ -144,3 +166,27 @@ DAT 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7, 0xD8, 0xD9, 0xDA, 0xDB, 0xDC
 DAT 0xE0, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF
 DAT 0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF
 :lib_crypto_end
+
+; Begin Library Header.
+DAT lib_crypto_wrapper
+DAT lib_crypto_cleanup
+; Begin Relocation Table.
+DAT lib_crypto_RELOC1+1
+DAT lib_crypto_RELOC2+1
+DAT lib_crypto_RELOC3+1
+DAT lib_crypto_RELOC4+1
+DAT lib_crypto_RELOC5+1
+DAT lib_crypto_RELOC6+2
+DAT lib_crypto_RELOC7+2
+DAT lib_crypto_RELOC8+1
+DAT lib_crypto_RELOC9+1
+DAT lib_crypto_RELOC10+1
+DAT lib_crypto_RELOC11+2
+DAT lib_crypto_RELOC12+1
+DAT lib_crypto_RELOC13+1
+DAT lib_crypto_RELOC14+1
+; End Relocation Table.
+DAT 14 ; Relocation table length
+DAT 1 ; Header version number.
+DAT 19 ; Library Header length.
+; End Library Header.
