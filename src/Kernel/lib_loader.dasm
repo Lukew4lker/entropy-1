@@ -1,0 +1,51 @@
+;@name ld_import_lib
+;Loads in a lib at sector A, returning A as the start of the function table
+;@params A
+;@returns A
+;@see thePalindrome, Lucus
+;Library header:
+;Words	     Contents
+;--------------------
+;variable	 Function table
+;variable	 Relocation table
+;-2	         Relocation table size
+;-1	         Header version
+;last	     Header size in words
+:ld_import_lib
+SET PUSH, B
+SET PUSH, C
+SET PUSH, I
+JSR fd_load_file
+SET B, A
+JSR fd_get_file_length
+SET I, B ; I tells us were the file lives, used for relocation
+ADD A, B
+SUB A, 1 ; I'm now at the last word in the file
+SET C, [A] ; C tells us how much of the header is left
+SUB C, 3
+SUB A, 1
+;Insert something to check for header version, just to double check
+SUB A, 1
+SET B, [A] ; B tells us how much of the relocation table is left
+SET PUSH, Y
+:.loop
+ADD [A], [I]
+SET Y, [A]
+ADD [Y], [I]
+SUB A, 1
+SUB B, 1
+SUB C, 1
+IFN B, 0
+    SET PC, .loop
+SET Y, POP
+:.loop2
+SET B, [A]
+ADD [B], [I]
+SUB A, 1
+SUB C, 1
+IFN C, 0
+    SET PC, .loop2
+SET I, POP
+SET C, POP
+SET B, POP
+SET PC, POP
