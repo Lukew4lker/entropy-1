@@ -300,7 +300,7 @@ DAT lib_rng_RELOC37+1
 DAT lib_rng_RELOC38+1
 DAT lib_rng_RELOC39+1
 ; End Relocation Table.
-DAT 38 ; Relocation table length.
+DAT 39 ; Relocation table length.
 DAT 1 ; Header version number.
 DAT 43 ; Library Header length.
 ; End Library Header.
