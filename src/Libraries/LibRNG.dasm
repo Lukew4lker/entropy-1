@@ -79,7 +79,7 @@
 
 :lib_rng_generate ; A is location where random number should be written to.
     SET PUSH, A
-    JSR [cd_get_sys_time]
+    JSR [0x06] ; cd_get_sys_time
     .longform ; All of these except for the last 2 need to be +2.
 :lib_rng_RELOC13 SET [lib_rng_seed_firstbyte], B
 :lib_rng_RELOC14 SHR [lib_rng_seed_firstbyte], 8
