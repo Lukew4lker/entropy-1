@@ -496,11 +496,11 @@ ife a, 0xffff
 set c, a
 set z, c; backup allocated memory area pointer
 jsr fd_get_wd
-add a, [root_offset]
+add a, [fd_root_offset]
 set b, a; backup original root offset 
 jsr fd_load_sector
 ife a, 0xffff ;incase fd_load_sector ever gives errors
-    set pc, error0001
+    set pc, .error0001
 set y, 0x0
 set x, 0x0
 set a, pop ; pop filename address location for use
@@ -533,7 +533,7 @@ ife a, 0xffff
 set b, a
 jsr fd_load_sector
 ife a, 0xffff ;incase fd_load_sector ever gives errors
-    set pc, error0001
+    set pc, .error0001
 set a, pop ; why can't I hold all of this data (end juggle)  
 set pc, pop
 
@@ -550,7 +550,7 @@ set x, pop
 set c, pop
 set pc, pop
 
-:error0001
+:.error0001
 set ex, b
 :.errorterminate
 set a, pop
@@ -560,7 +560,7 @@ set x, pop
 set c, pop
 set pc, pop
 
-:.EoD;(file not found in directory)
+:.eod;(file not found in directory)
 set ex, pop
 set ex, 0x404
 set a, pop
