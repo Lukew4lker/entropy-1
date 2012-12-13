@@ -490,7 +490,7 @@ set push, y
 set push, z
 set push, a
 set a, 0x200
-jsr mm_alloc_memory
+jsr mm_request_memory
 ife a, 0xffff
    set pc, .error0001
 set c, a
