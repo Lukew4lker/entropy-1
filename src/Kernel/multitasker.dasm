@@ -161,6 +161,43 @@
 		
 	:multitasker_Interrupt_End
     SET PC, POP
+
+; By Lukew4lker
+; Program_Manager - Retrive program information from data structure 
+; A input process number (Starting from 0), If no input then use current process.
+; b is data type offset as defined by the program manager's data structure for programs 
+; Returns B as data, A is preserved 
+ 
+	:multitasker_GetInfo
+	set push, a
+	set push, c
+	set push, x
+	set x, 0x0  ; Set pre-emption check bol value to 0 so that we don't get incorrect data later.
+	ife a, 0x0
+		set pc, .usecurProg
+	mul a, 0xc  ; standard data structure size (12 bits)
+	set c, multitasker_Progs_0
+	add a, c  ;now points the process address in ram
+	
+	:.start
+	add a, b; add the off defined by the input
+	set b, [a]
+	ife x, 1 check's if preemption stopped
+		sub [multitasker_preemption_lock], 1
+;add ticks used handler here if used No preemption? 
+	set x, pop
+	set c, pop
+	set a, pop
+	set pc, pop
+
+	:.usecurProg
+	set x, 0x1
+	add [multitasker_preemption_lock], 1; set so that we don't don't lose the current process to a process swhich.
+	set a, [multitasker_curProg]
+	mul a, 0xc
+	set c, multitasker_Progs_0
+	add a, c
+	set pc, .start
 	
 :multitasker_curProg dat 0
 :multitasker_preemption_lock dat 1
@@ -188,3 +225,4 @@
 :multitasker_Progs_14 dat 0,0,0,0,0,0,0,0,0,0,0,0
 :multitasker_Progs_15 dat 0,0,0,0,0,0,0,0,0,0,0,0
 :multitasker_Progs_end
+:multitasker_Prog_max

@@ -571,6 +571,17 @@ set x, pop
 set c, pop
 set pc, pop
 
+:fd_get_wd ; a - input stack length. Return the working directory in a.
+set push, b
+set push, a
+set a, 0x0 
+set b, 0xc
+jsr :multitasker_GetInfo
+add b, pop
+set a, [b-1]
+set b, pop
+set pc, pop
+
 :fd_find_sector ; Find sector B in file A.	;Find and load, I assume?
 :fd_apply ; Apply changes to file A. Do this before loading another sector in the file.
 :fd_discard ; Discard changes to file A. Will reload the current sector from disk.
@@ -579,9 +590,6 @@ set pc, pop
 :fd_move ; Move file, dir or link A.
 :fd_change_dir ; Change the working directory to A, one level at a time.
 :fd_list ; List the files in the working directory.
-:fd_get_wd ; Get the working directory.
-set A, [fd_working_dir]
-set pc, pop
 :fd_get_flags ; Get the flags for file A.
 :fd_set_flags ; Set the flags for file A to B. Some flag changes will be reverted before applying.
 :fd_get_props ; Get the properties (size, number of children, flags, create, edit and view times).	;How should I get the number of children??
