@@ -87,7 +87,7 @@ set a, pop
 ife i, a
 set pc, pop
 :.loop_b
-sti [i], [j]
+sti [j], [i]
 ifn i, a
 set pc, .loop_b
 set pc, pop

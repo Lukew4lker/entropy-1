@@ -576,9 +576,9 @@ set push, b
 set push, a
 set a, 0x0 
 set b, 0xc
-jsr :multitasker_GetInfo
+jsr multitasker_GetInfo
 add b, pop
-set a, [b-1]
+set a, [b + -1]
 set b, pop
 set pc, pop
 

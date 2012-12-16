@@ -182,7 +182,7 @@
 	:.start
 	add a, b; add the off defined by the input
 	set b, [a]
-	ife x, 1 check's if preemption stopped
+	ife x, 1 ;check's if preemption stopped
 		sub [multitasker_preemption_lock], 1
 ;add ticks used handler here if used No preemption? 
 	set x, pop

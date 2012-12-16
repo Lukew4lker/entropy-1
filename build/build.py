@@ -5,6 +5,7 @@ import os, platform, sys, random
 def build(f, outname="", le=True):
 	if outname == "":
 		outname = f[f.rfind("/")+1:f.rfind(".")] + ".bin"
+	print("Building: ", outname)
 	c = ""
 	if platform.system() != "Windows":
 		c += "mono "
@@ -88,7 +89,9 @@ try:
 	for d in range(len(filedata)):
 		firstsectors.append(n)
 		for i in range(sizes2[d]-1):
-			bytesout += inttobytes(i, 2)
+			n += 1
+			bytesout += inttobytes(n, 2)
+		n += 1
 		bytesout += inttobytes(65535, 2)
 	bytesout += bytes(1024 * (reservedsectors + 3) - len(bytesout))
 	for d in range(len(filedata)):
