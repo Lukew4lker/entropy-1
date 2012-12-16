@@ -479,73 +479,80 @@ set A, pop
 set pc, pop
 
 
+;by Lukew4lker
 :fd_find_file_dte ; (not tested) 
-; a- starting address of file name string (11 chars), 
-;output a - offset of file dte in sector b. 
-;B MUST BE EMTPY BEFORE CALLING, IF NOT YOU DESERVE TO LOSE IT.
-;>:D
+;
+; Input
+; a- starting address of file name string (11 chars)
+; b - "Usable space " dir sector number if null use current processes wd
+;
+; Output
+; a - offset of file dte in sector b(output is a useable space sector number)
 set push, c
 set push, x
-set push, y
-set push, z
 set push, a
 set a, 0x200
 jsr mm_request_memory
 ife a, 0xffff
    set pc, .error0001
-set c, a
-set z, c; backup allocated memory area pointer
-jsr fd_get_wd
-add a, [fd_root_offset]
-set b, a; backup original root offset 
+set c, a ; a isn't being used anymore
+ife b, 0x0
+set pc, .usewd
+set a, b
+add a, [fd_root_offset] ; translates useable sector numbers into actual drive sector numbers
+:.endusewd ;by this point, [A] should point to the sector to be loaded
 jsr fd_load_sector
 ife a, 0xffff ;incase fd_load_sector ever gives errors
     set pc, .error0001
-set y, 0x0
+set b, a ; sector number is now stored in b
+set a, pop ; a points to filename location
 set x, 0x0
-set a, pop ; pop filename address location for use
 
-:.loop ; Look at first letter if  = then read next letter, else goto next dte
-ife y, 0x20
+:.loop ;read string as whole, if != match, goto next dte
+ife x, 0x20
     jsr .load_next_sector_of_dir
 ife [a], [c]
-    jsr .nextletterloop
-set x, 0x0
+	ife [a+1], [c+1]
+		ife [a+2], [c+2]
+			ife [a+3], [c+3]
+				ife [a+4], [c+4]
+					ife [a+5], [c+5]
+						ife [a+6], [c+6]
+							ife [a+7], [c+7]
+								ife [a+8], [c+8]
+									ife [a+9], [c+9]
+										ife [a+10], [c+10]
+											ife [a+11], [c+11]
+												set pc, .foundfile
 add c, 0x10
-add y, 1
+add x, 1
 set pc, .loop
 
-:.nextletterloop
-add a, 1
-add x, 1
-ife [a], [c]
-    set pc, .chkifdone
+:.usewd
 set a, 0x0
-set pc, pop ;if not equal then look at next DTE
+jsr fd_get_wd
+add a, [fd_root_offset] ; translates useable sector numbers into actual drive sector numbers
+set pc, .endusewd
 
 :.load_next_sector_of_dir
-set c, z ;Grab backup allocated memory area pointer.
-set push, a  ;Why can't I hold all of this data? (start juggle)
+set push, a
+sub c, 0x200 ;put memory pointer back to start
+sub b, [fd_root_offset] ; translate back to useable sector number
 set a, b
 jsr  fd_get_FAT_entry
 ife a, 0xffff
     set pc, .eod
+add b, [fd_root_offset] ;translate to drive sector numbers
 set b, a
 jsr fd_load_sector
 ife a, 0xffff ;incase fd_load_sector ever gives errors
     set pc, .error0001
-set a, pop ; why can't I hold all of this data (end juggle)  
+set a, pop
+set x, 0x0
 set pc, pop
-
-:.chkifdone
-ife x, 0xb
-    set pc, .foundfile
-set pc, .nextletterloop
 
 :.foundfile
 set a, c 
-set z, pop
-set y, pop
 set x, pop
 set c, pop
 set pc, pop
@@ -554,19 +561,13 @@ set pc, pop
 set ex, b
 :.errorterminate
 set a, pop
-set z, pop
-set y, pop
 set x, pop
 set c, pop
 set pc, pop
 
 :.eod;(file not found in directory)
-set ex, pop
 set ex, 0x404
-set a, pop
 set a, 0xffff
-set z, pop
-set y, pop
 set x, pop
 set c, pop
 set pc, pop
