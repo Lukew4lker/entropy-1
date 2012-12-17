@@ -481,95 +481,118 @@ set pc, pop
 
 ;by Lukew4lker
 :fd_find_file_dte ; (not tested) 
-;
-; Input
+;input
 ; a- starting address of file name string (11 chars)
-; b - "Usable space " dir sector number if null use current processes wd
-;
-; Output
+;b - "Usable space " dir sector number if null use current processes wd
+;output
 ; a - offset of file dte in sector b(output is a useable space sector number)
+set push, i 
+set push, j
+set push, y
 set push, c
 set push, x
 set push, a
 set a, 0x200
-jsr mm_request_memory
+jsr mm_alloc_memory
 ife a, 0xffff
    set pc, .error0001
-set c, a ; a isn't being used anymore
+set c, a; a isn't being used anymore
 ife b, 0x0
 set pc, .usewd
 set a, b
-add a, [fd_root_offset] ; translates useable sector numbers into actual drive sector numbers
-:.endusewd ;by this point, [A] should point to the sector to be loaded
+add a, [fd_root_offset]; translates useable sector numbers into actual drive sector numbers
+:.endusewd ;by this point, A should point to the sector to be loaded
 jsr fd_load_sector
 ife a, 0xffff ;incase fd_load_sector ever gives errors
     set pc, .error0001
-set b, a ; sector number is now stored in b
+set b, a; sector number is now stored in b
 set a, pop ; a points to filename location
 set x, 0x0
+set i, a
+set j, c
+set y, 0x1
+set push, a
+add a, 6
 
-:.loop ;read string as whole, if != match, goto next dte
-ife x, 0x20
-    jsr .load_next_sector_of_dir
-ife [a], [c]
-	ife [a+1], [c+1]
-		ife [a+2], [c+2]
-			ife [a+3], [c+3]
-				ife [a+4], [c+4]
-					ife [a+5], [c+5]
-						ife [a+6], [c+6]
-							ife [a+7], [c+7]
-								ife [a+8], [c+8]
-									ife [a+9], [c+9]
-										ife [a+10], [c+10]
-											ife [a+11], [c+11]
-												set pc, .foundfile
-add c, 0x10
-add x, 1
+:.loop
+ife i, a  
+set pc, .foundfile
+ifn [i],[j]
+set pc, .looknextdte
+ife i, a
+   ife y, 0x20
+      set pc, .load_next_sector_of_dir
+sti pc, .loop
+
+:.looknextdte
+set i, peek
+add j, 0x11
+And [j + 6], 0xff00
+add y, 1
 set pc, .loop
 
 :.usewd
 set a, 0x0
 jsr fd_get_wd
-add a, [fd_root_offset] ; translates useable sector numbers into actual drive sector numbers
+add a, [fd_root_offset]; translates useable sector numbers into actual drive sector numbers
 set pc, .endusewd
 
 :.load_next_sector_of_dir
 set push, a
-sub c, 0x200 ;put memory pointer back to start
-sub b, [fd_root_offset] ; translate back to useable sector number
+sub j, 0x200;put memory pointer back to start
+sub b, [fd_root_offset]; translate back to useable sector number
 set a, b
 jsr  fd_get_FAT_entry
 ife a, 0xffff
     set pc, .eod
-add b, [fd_root_offset] ;translate to drive sector numbers
+add b, [fd_root_offset];translate to drive sector numbers
 set b, a
 jsr fd_load_sector
 ife a, 0xffff ;incase fd_load_sector ever gives errors
-    set pc, .error0001
+    set pc, .error0002
 set a, pop
 set x, 0x0
-set pc, pop
-
-:.foundfile
-set a, c 
-set x, pop
-set c, pop
-set pc, pop
+set pc, .loop
 
 :.error0001
-set ex, b
-:.errorterminate
 set a, pop
 set x, pop
 set c, pop
+set y, pop
+set j, pop
+set i, pop
+set ex, 0x0fff
+
+:.error0002
+set 1, pop ;destroys backup working directory, the original is in a :/
+set a, 0xffff
+set x, pop
+set c, pop
+set y, pop
+set j, pop
+set i, pop
 set pc, pop
+ 
 
 :.eod;(file not found in directory)
+set ex, pop ; destroys backup working directory, the original is in a :/
 set ex, 0x404
 set a, 0xffff
 set x, pop
 set c, pop
+set y, pop
+set j, pop
+set i, pop
+set pc, pop
+
+:.foundfile
+set a, pop
+set a, c 
+set x, pop
+set c, pop
+set y, pop
+set j, pop
+set i, pop
 set pc, pop
 
 :fd_get_wd ; a - input stack length. Return the working directory in a.
