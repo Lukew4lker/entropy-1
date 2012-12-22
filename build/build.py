@@ -72,7 +72,7 @@ try:
 		f.seek(32)
 		entropy = f.read()
 	sizes2 = [(a >> 9) + 1 for a in sizes]
-	reservedsectors = (len(entropy) >> 10) + 1
+	reservedsectors = ((len(entropy) + 32) >> 10) + 1
 	bytesout = bytes.fromhex("82c3") #bootflag
 	bytesout += bytes.fromhex("164a") #filesystem descriptor
 	bytesout += bytes("nErtpo\0y\0\0\0\0", "utf-8") #disk name
