@@ -2,14 +2,19 @@
 
 import os, platform, sys, random
 
+def addexeh(code):
+        pass
+
 def build(f, outname="", le=True):
 	if outname == "":
 		outname = f[f.rfind("/")+1:f.rfind(".")] + ".bin"
 	print("Building: ", outname)
 	c = ""
 	if platform.system() != "Windows":
-		c += "mono "
-	c += "Organic.exe ../src/" + f +  " ../bin/" + outname
+		c += "mono ../tools/Organic.exe ../src/"
+	else:
+                c += "..\\tools\\Organic.exe ../src/"
+	c += f +  " ../bin/" + outname
 	c += " --working-directory ../src/" + f[:f.rfind("/")+1]
 	if le:
 		c += " --little-endian"
@@ -109,5 +114,3 @@ except:
 	raise
 
 waitkey()
-
-sys.exit(0)
