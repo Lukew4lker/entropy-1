@@ -39,6 +39,8 @@
 .dat fd_load_file				;0x18
 .dat fd_edit_file				;0x19
 
-.define api_table_length		 0x18
+.dat ld_import_lib            ;0x1A
+
+.define api_table_length		 0x19
 
 :api_table_end

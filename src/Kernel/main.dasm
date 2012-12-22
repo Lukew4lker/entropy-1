@@ -31,6 +31,7 @@ set pc, initiate_kernel
 #include "filesystem.dasm"
 #include "clock_driver.dasm"
 #include "sig_manager.dasm"
+#include "lib_loader.dasm"
 :free_space_start
 .dat 0xffff - end_of_kernel, 0xffff		;needed for memory manager.
 #include "initiate.dasm"	;move all initiators here
