@@ -61,6 +61,7 @@ def makedte(num):
 try:
 	build("Bootloader/main.dasm", "bootloader.bin", False)
 	build("Kernel/main.dasm", "entropy.bin")
+	build("Kernel/diskdata.dasm", "diskdata.bin")
 	with open("buildlist.txt", "r") as f:
 		builds = f.readlines()
 	includes = [build(x) for x in builds]
@@ -73,10 +74,12 @@ try:
 	sizes = [len(x)//2 for x in filedata]
 	with open("../bin/bootloader.bin", "rb") as f:
 		bootloader = f.read()
+	with open("../bin/diskdata.bin", "rb") as f:
+		diskdata = f.read()
 	with open("../bin/entropy.bin", "rb") as f:
 		f.seek(32)
 		entropy = f.read()
-	sizes2 = [(a >> 9) + 1 for a in sizes]
+	sizes2 = [((a - 1) >> 9) + 1 for a in sizes]
 	reservedsectors = ((len(entropy) + 32) >> 10) + 1
 	bytesout = bytes.fromhex("82c3") #bootflag
 	bytesout += bytes.fromhex("164a") #filesystem descriptor
@@ -88,20 +91,9 @@ try:
 	bytesout += inttobytes(random.randint(0, 2 ** 64 - 1), 4) #random ID
 	bytesout += entropy #entropy code
 	bytesout += bytes(1024 * reservedsectors - len(bytesout)) #filler
-	bytesout += inttobytes(65535, 2)
-	n = 1 #0 is root
-	firstsectors = []
-	for d in range(len(filedata)):
-		firstsectors.append(n)
-		for i in range(sizes2[d]-1):
-			n += 1
-			bytesout += inttobytes(n, 2)
-		n += 1
-		bytesout += inttobytes(65535, 2)
-	bytesout += bytes(1024 * (reservedsectors + 3) - len(bytesout))
-	for d in range(len(filedata)):
-		bytesout += makedte(d)
-	bytesout += bytes(1024 * (reservedsectors + 4) - len(bytesout))
+	bytesout += diskdata
+	if len(diskdata) % 1024 != 0:
+		bytesout += bytes(1024 - (len(diskdata) % 1024))
 	for d in range(len(filedata)):
 		bytesout += filedata[d]
 		bytesout += bytes(2 * (sizes2[d] * 512 - sizes[d]))
