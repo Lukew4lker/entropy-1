@@ -1,7 +1,9 @@
 ;@name ld_import_lib
-;Loads in a lib at filename A, returning A as the start of the function table
+;Loads in a lib at filename A, returning A as the start of the function table, B as the lib ID, and C as the version
 ;@params A
 ;@returns A
+;@returns B
+;@returns C
 ;@see thePalindrome, Lucus
 ;Library header:
 ;Words	     Contents
@@ -12,8 +14,8 @@
 ;-1	         Header version
 ;last	     Header size in words
 :ld_import_lib
-SET PUSH, B
-SET PUSH, C
+SET PUSH, Y
+SET PUSH, Z
 SET PUSH, I
 JSR fd_load_file
 SET B, A
@@ -25,6 +27,10 @@ SET C, [A] ; C tells us how much of the header is left
 SUB C, 3
 SUB A, 1
 ;Insert something to check for header version, just to double check
+SUB A, 1
+SET Z, [A] ; Z is the lib ID
+SUB A, 1
+SET Y, [A] ; Y is the lib version
 SUB A, 1
 SET B, [A] ; B tells us how much of the relocation table is left
 SET PUSH, Y
@@ -46,6 +52,8 @@ SUB C, 1
 IFN C, 0
     SET PC, .loop2
 SET I, POP
-SET C, POP
-SET B, POP
+SET C, Y
+SET B, Z
+SET Z, POP
+SET Y, POP
 SET PC, POP
