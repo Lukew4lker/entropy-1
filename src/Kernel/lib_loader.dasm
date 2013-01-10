@@ -1,5 +1,5 @@
 ;@name ld_import_lib
-;Loads in a lib at sector A, returning A as the start of the function table
+;Loads in a lib at filename A, returning A as the start of the function table
 ;@params A
 ;@returns A
 ;@see thePalindrome, Lucus
