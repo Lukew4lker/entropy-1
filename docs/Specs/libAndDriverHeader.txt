@@ -3,9 +3,11 @@ will give word positions relative to the end of the file:
 
 WORD:            Function:
 0                header size (include this word!)
--1               lib version number (see below)
--2               length of relocation table
--3               relocation table (see below)
+-1               lib header version number (see below)
+-2               lib ID
+-3               lib version number
+-4               length of relocation table
+-5               relocation table (see below)
 -pastRelocTable  function table (see below)
 -pastFuncTable   hardware ID (DRIVERS ONLY)
 
