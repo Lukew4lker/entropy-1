@@ -187,6 +187,8 @@ DAT lib_crypto_RELOC13+1
 DAT lib_crypto_RELOC14+1
 ; End Relocation Table.
 DAT 14 ; Relocation table length
-DAT 1 ; Header version number.
+DAT 1 ; Lib version number.
+DAT 0x0004 ; Lib ID
+DAT 2 ; Header version number.
 DAT 19 ; Library Header length.
 ; End Library Header.
