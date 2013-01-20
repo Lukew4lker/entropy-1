@@ -4,12 +4,11 @@ will give word positions relative to the end of the file:
 WORD:            Function:
 0                header size (include this word!)
 -1               lib header version number (see below)
--2               lib ID
+-2               lib ID/pointer to driver hardware ID func(see below)
 -3               lib version number
 -4               length of relocation table
 -5               relocation table (see below)
 -pastRelocTable  function table (see below)
--pastFuncTable   hardware ID (DRIVERS ONLY)
 
 VERSION NUMBERS:
 Lib header versions start at 1, whilst drivers start at 0xFFFF

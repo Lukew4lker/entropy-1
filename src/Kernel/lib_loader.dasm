@@ -10,8 +10,10 @@
 ;--------------------
 ;variable	 Function table
 ;variable	 Relocation table
-;-2	         Relocation table size
-;-1	         Header version
+;-4	         Relocation table size
+;-3	         Lib/Driver Version
+;-2          Lib/Driver ID
+;-1          Header Version
 ;last	     Header size in words
 :ld_import_lib
 SET PUSH, Y
